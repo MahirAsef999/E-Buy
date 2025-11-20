@@ -15,14 +15,14 @@ CORS(app)
 JWT_SECRET = "dev_secret"
 
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "user": "bestbuy_user",
+    "host": "localhost",
+    "user": "ebuy_user",
     "password": "Software5432",
-    "database": "bestbuy_app",
+    "database": "ebuy_app",
 }
 
 pool = pooling.MySQLConnectionPool(
-    pool_name="bestbuy_pool",
+    pool_name="ebuy_pool",
     pool_size=5,
     **DB_CONFIG,
 )
