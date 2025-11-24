@@ -11,10 +11,6 @@
 </head>
 <body>
   <!-- Cart button -->
-  <button id="cartButton" onclick="openCart()">
-    <img src="https://png.pngtree.com/png-clipart/20190920/original/pngtree-shopping-cart-convenient-icon-png-image_4637407.jpg" alt="Shopping Cart"/>
-    <div id="cartBadge">0</div>
-  </button>
 
   <!-- Shopping cart -->
   <div id="cartModal" class="modal">
@@ -77,7 +73,30 @@
     </div>
   </div>
 
-  <h1 style="padding-left:20px;">E-Buy</h1>
+  <div id="header">
+    <div id="website-name">E-Buy</div>
+    <form id="search-box">
+      <input type="text" id="search-input"/>
+      <button id="submit-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+        </svg>
+      </button>
+    </form>
+    <div id="account-box">
+      Hello, user
+      <div id="account-second-line">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="22" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+        </svg>
+        Account
+      </div>
+    </div>
+    <button id="cartButton" onclick="openCart()">
+    <img src="https://png.pngtree.com/png-clipart/20190920/original/pngtree-shopping-cart-convenient-icon-png-image_4637407.jpg" alt="Shopping Cart"/>
+    <div id="cartBadge">0</div>
+  </button>
+  </div>
   <h2 style="padding-left:20px;">By Mahir, Kellen, Chinemerem, and Kira</h2>
   <h3 style="padding-left:20px;">Click an item to view details or add it to your cart.</h3>
 
