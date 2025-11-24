@@ -5,11 +5,85 @@ body {
   margin: 0;
 }
 
+
+#header{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: fit-content;
+  padding: 15px;
+  align-items: center;
+  gap: 20px;
+}
+
+#website-name{
+  font-size: 28px;
+  font-weight: 700;
+  margin-left: 30px;
+  margin-right: 20px;
+}
+
+#search-box{
+  display: flex;
+  flex-direction: row;
+  width: 65%;
+  height: 34%;
+  border-radius: 15px;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+#search-box:hover,
+#search-box:focus-within {
+  box-shadow: 0 4px 8px black;
+}
+
+#search-input{
+  width: 95%;
+  height: 28px;
+  font-size: 16px;
+  margin-right: 0px;
+  border-color: transparent;
+}
+
+#search-input:focus{
+  border-color: transparent;
+  outline: none;
+}
+
+#submit-search{
+  width: 5%;
+  height: 33.2px;
+  margin-left: 0px;
+  border-color: transparent;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: rgb(33, 33, 104);
+}
+
+#submit-search:hover{
+  cursor: pointer;
+}
+
+#accout-box{
+  transition: transform, 1s, ease-in-out;
+}
+
+#account-box:hover{
+  cursor: pointer;
+  transform: scale(1.01);
+}
+
+#account-second-line{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+
 /* Cart button */
 #cartButton {
-  position: fixed;
-  top: 10px;
-  right: 10px;
   background-color: transparent;
   border: none;
   cursor: pointer;
