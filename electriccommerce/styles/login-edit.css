@@ -1,0 +1,83 @@
+#main-container{
+    display: flex;
+    flex-direction: column;
+}
+
+#submain-container{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    padding: 10px;
+}
+
+#path-row{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+#path-row a{
+    display: inline;
+    text-decoration: none;
+}
+
+#path-row a:hover{
+    text-decoration: underline;
+}
+
+#title-row{
+    font-size: 24px;
+    font-weight: 600;
+}
+
+#edit-container{
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    border: 1px solid gray;
+    border-radius: 10px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    gap: 14px;
+}
+
+.title{
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.edit-box{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: flex-end;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.edit-row{
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.border-bottom{
+    padding-bottom: 20px;
+    border-bottom: 1px rgb(192, 191, 191) solid;
+}
+
+.edit-row input{
+    font-size: 18px;
+    padding: 6px;
+}
+
+.save-changes{
+    height: 30px;
+    border-radius: 10px;
+    background-color: yellowgreen;
+    color: #333333;
+}
+
+.save-changes:hover{
+    cursor: pointer;
+}
