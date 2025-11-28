@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Options - E-Buy</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/paymentsystem.css">
+</head>
+<body>
+    <div id="header">
+        <div id="website-name">E-Buy</div>
+        
+        <div id="search-box">
+            <input type="text" id="search-input" placeholder="Search for product">
+            <button id="submit-search">🔍</button>
+        </div>
+
+        <div id="account-box" onclick="window.location.href='account.html'">
+            <div>Hello, user</div>
+            <div id="account-second-line">
+                <div style="font-weight: 700;">Account</div>
+            </div>
+        </div>
+
+        <button id="cartButton">
+            <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Cart">
+            <span id="cartBadge">0</span>
+        </button>
+    </div>
+
+    <main>
+        <div class="container">
+            <div class="back-link">
+                <a href="account.html">← Back to Account</a>
+            </div>
+
+            <h1>Payment Options</h1>
+            <p class="subtitle">Manage your credit/debit cards and payment methods</p>
+
+            <!-- Add New Payment Method Section -->
+            <div class="payment-form-container">
+                <h2 id="form-title">Add New Payment Method</h2>
+                
+                <form id="payment-form">
+                    <input type="hidden" id="payment-id" value="">
+                    
+                    <div class="form-group">
+                        <label for="card-type">Card Type *</label>
+                        <select id="card-type" required>
+                            <option value="">Select card type</option>
+                            <option value="Visa">Visa</option>
+                            <option value="Mastercard">Mastercard</option>
+                            <option value="American Express">American Express</option>
+                            <option value="Discover">Discover</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardholder-name">Cardholder Name *</label>
+                        <input type="text" id="cardholder-name" placeholder="John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="card-number">Card Number *</label>
+                        <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiry-date">Expiry Date *</label>
+                            <input type="text" id="expiry-date" placeholder="MM/YY" maxlength="5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cvv">CVV *</label>
+                            <input type="text" id="cvv" placeholder="123" maxlength="4" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="billing-zip">Billing ZIP Code *</label>
+                        <input type="text" id="billing-zip" placeholder="12345" maxlength="10" required>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="is-default">
+                            Set as default payment method
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="submit-btn">Save Payment Method</button>
+                        <button type="button" class="btn-secondary" id="cancel-btn" style="display: none;">Cancel</button>
+                    </div>
+
+                    <p class="form-note">* All fields are required. Your payment information is encrypted and secure.</p>
+                </form>
+            </div>
+
+            <!-- Saved Payment Methods Section -->
+            <div class="saved-payments-container">
+                <h2>Saved Payment Methods</h2>
+                <div id="payment-methods-list">
+                    <p class="loading">Loading payment methods...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/paymentsystem.js"></script>
+</body>
+</html>
