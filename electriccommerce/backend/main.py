@@ -1,7 +1,7 @@
 import re
 import uuid
 import datetime
-import os  # ADD THIS
+import os
 
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
@@ -10,13 +10,13 @@ import jwt
 from mysql.connector import pooling, Error as MySQLError
 from email_validator import validate_email, EmailNotValidError
 
-from paymentsystem import register_payment_routes  # ADD THIS
+from paymentsystem import register_payment_routes
 
 app = Flask(__name__)
 CORS(app)
 
 JWT_SECRET = "dev_secret"
-PAYMENT_ENCRYPTION_KEY = os.environ.get('PAYMENT_KEY', 'dev_payment_key_change_in_production')  # ADD THIS
+PAYMENT_ENCRYPTION_KEY = os.environ.get('PAYMENT_KEY', 'dev_payment_key_change_in_production')
 
 DB_CONFIG = {
     "host": "localhost",
@@ -35,7 +35,7 @@ NAME_RE = re.compile(r"^.{2,}$")
 
 
 def issue_token(user):
-    payload = {"id": user["id"], "email": user["email"], "name": user["name"]}
+    payload = {"id": user["id"], "email": user["email"], "first_name": user["first_name"], "last_name": user["last_name"]}
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
@@ -49,7 +49,8 @@ def health():
 @app.post("/api/auth/register")
 def register():
     data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
+    first_name = (data.get("first_name") or "").strip()
+    last_name = (data.get("last_name") or "").strip()
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
     address = (data.get("address") or "").strip() or None
@@ -59,8 +60,11 @@ def register():
     except EmailNotValidError:
         return jsonify({"errors": [{"msg": "Invalid email"}]}), 400
 
-    if not NAME_RE.match(name):
-        return jsonify({"errors": [{"msg": "Name must be at least 2 characters"}]}), 400
+    if not NAME_RE.match(first_name):
+        return jsonify({"errors": [{"msg": "First name must be at least 2 characters"}]}), 400
+
+    if not NAME_RE.match(last_name):
+        return jsonify({"errors": [{"msg": "Last name must be at least 2 characters"}]}), 400
 
     if len(password) < 8:
         return jsonify({"errors": [{"msg": "Password must be at least 8 characters"}]}), 400
@@ -69,9 +73,9 @@ def register():
         conn = pool.get_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "INSERT INTO users (name, email, password_hash, address) "
-            "VALUES (%s, %s, SHA2(%s,256), %s)",
-            (name, email, password, address),
+            "INSERT INTO users (first_name, last_name, email, password_hash, address) "
+            "VALUES (%s ,%s, %s, SHA2(%s,256), %s)",
+            (first_name, last_name, email, password, address),
         )
         conn.commit()
         return jsonify({"id": cur.lastrowid, "email": email})
@@ -106,7 +110,7 @@ def login():
         conn = pool.get_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "SELECT id, name, email "
+            "SELECT id,  first_name, last_name, email "
             "FROM users "
             "WHERE email=%s AND password_hash=SHA2(%s,256) "
             "LIMIT 1",
@@ -147,7 +151,7 @@ PRODUCTS = {
     "Switch2": {"price": 499},
     "PlayStation5": {"price": 599},
     "XboxS": {"price": 399},
-    "OutDatedGameBoy": {"price": 1},
+    "OutDatedGameBoy": {"price": 59},
     "Headphones": {"price": 49},
     "IPad": {"price": 299},
     "GamingDesktop": {"price": 999},
@@ -222,6 +226,18 @@ def remove_item(pid):
 @app.post("/api/orders")
 def create_order():
     t = tok()
+    
+    # Try to get user_id from JWT token
+    user_id = None
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            user_id = payload['id']
+        except jwt.InvalidTokenError:
+            pass
+    
     if not CARTS.get(t):
         abort(400, "cart empty")
 
@@ -235,13 +251,13 @@ def create_order():
         conn = pool.get_connection()
         cur = conn.cursor()
 
-        # insert order row
+        # insert order row WITH user_id
         cur.execute(
             """
-            INSERT INTO orders (id, demo_token, total, status, created_at)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO orders (id, demo_token, user_id, total, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """,
-            (order_id, t, order_total, "pending", created_at),
+            (order_id, t, user_id, order_total, "pending", created_at),
         )
 
         # insert order_items rows
@@ -289,8 +305,66 @@ def create_order():
 
 @app.get("/api/orders")
 def list_orders():
+    # Check for JWT token first (for logged-in users)
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            user_id = payload['id']
+            
+            # Get orders from database for this user
+            try:
+                conn = pool.get_connection()
+                cur = conn.cursor(dictionary=True)
+                
+                # Get orders
+                cur.execute("""
+                    SELECT id, total, status, created_at, paid_at
+                    FROM orders
+                    WHERE user_id = %s
+                    ORDER BY created_at DESC
+                """, (user_id,))
+                
+                orders = cur.fetchall()
+                
+                # Get items for each order
+                result = []
+                for order in orders:
+                    cur.execute("""
+                        SELECT product_id, quantity, unit_price
+                        FROM order_items
+                        WHERE order_id = %s
+                    """, (order['id'],))
+                    
+                    items = cur.fetchall()
+                    
+                    result.append({
+                        'id': order['id'],
+                        'total': float(order['total']),
+                        'status': order['status'],
+                        'createdAt': order['created_at'].isoformat() if order['created_at'] else None,
+                        'items': [{
+                            'productId': item['product_id'],
+                            'qty': item['quantity'],
+                            'price': float(item['unit_price'])
+                        } for item in items]
+                    })
+                
+                cur.close()
+                conn.close()
+                
+                return jsonify(result)
+                
+            except MySQLError as e:
+                app.logger.exception(e)
+                return "Server error", 500
+                
+        except jwt.InvalidTokenError:
+            pass
+    
+    # Fallback to demo token behavior (for guest users)
     t = tok()
-    # keep existing behavior: only orders from this process
     return jsonify([o for o in ORDERS.values() if o["user"] == t])
 
 
@@ -309,7 +383,7 @@ def pay():
     # also update DB so status persists
     try:
         conn = pool.get_connection()
-        cur = cursor()
+        cur = conn.cursor()
         if new_status == "paid":
             cur.execute(
                 "UPDATE orders SET status=%s, paid_at=%s WHERE id=%s",
@@ -335,7 +409,6 @@ def pay():
 
 
 # ---------- REGISTER PAYMENT ROUTES ----------
-# ADD THIS BEFORE if __name__ == "__main__":
 register_payment_routes(app, pool, JWT_SECRET, PAYMENT_ENCRYPTION_KEY)
 
 

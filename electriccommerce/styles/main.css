@@ -88,6 +88,7 @@ body {
   border: none;
   cursor: pointer;
   z-index: 999;
+  position: relative;   
 }
 
 #cartButton img {
