@@ -99,9 +99,10 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
   if (hasError) return;
 
-  try {
+try {
     await postJSON("/auth/register", {
-      name,
+      first_name: firstName,
+      last_name:  lastName,
       email,
       password,
       address: address || null,

@@ -9,7 +9,9 @@
 <body>
   <div class="wrap">
     <div class="brand">
-      <img alt="Cart" src="https://png.pngtree.com/png-clipart/20190920/original/pngtree-shopping-cart-convenient-icon-png-image_4637407.jpg" width="48" height="48" />
+      <img alt="Cart"
+           src="https://png.pngtree.com/png-clipart/20190920/original/pngtree-shopping-cart-convenient-icon-png-image_4637407.jpg"
+           width="48" height="48" />
       <div>
         <h1>E-Buy</h1>
         <h2 class="muted">Create Your Account</h2>
@@ -21,39 +23,48 @@
         <fieldset>
           <legend>Register</legend>
           <form id="registerForm" novalidate>
+            <!-- First Name -->
             <div class="form-group">
-              <label for="regName">First Name</label>
-              <input id="regName" type="text" placeholder="John" required>
-              <span class="field-error" id="nameError"></span>
+              <label for="regFirstName">First Name</label>
+              <input id="regFirstName" type="text" placeholder="Enter first name" required>
+              <span class="field-error" id="firstNameError"></span>
             </div>
 
+            <!-- Last Name -->
             <div class="form-group">
-              <label for="regName">Last Name</label>
-              <input id="regName" type="text" placeholder="Doe" required>
-              <span class="field-error" id="nameError"></span>
+              <label for="regLastName">Last Name</label>
+              <input id="regLastName" type="text" placeholder="Enter last name" required>
+              <span class="field-error" id="lastNameError"></span>
             </div>
 
+            <!-- Email -->
             <div class="form-group">
               <label for="regEmail">Email</label>
-              <input id="regEmail" type="email" placeholder="your@email.com" required>
+              <input id="regEmail" type="email" placeholder="Enter email" required>
               <span class="field-error" id="emailError"></span>
             </div>
 
+            <!-- Password -->
             <div class="form-group">
               <label for="regPassword">Password</label>
-              <input id="regPassword" type="password" placeholder="At least 8 characters" minlength="8" required>
+              <input id="regPassword" type="password"
+                     placeholder="Enter password" minlength="8" required>
               <span class="field-error" id="passwordError"></span>
             </div>
 
+            <!-- Confirm Password -->
             <div class="form-group">
               <label for="regPassword2">Confirm Password</label>
-              <input id="regPassword2" type="password" placeholder="Re-enter password" minlength="8" required>
+              <input id="regPassword2" type="password"
+                     placeholder="Re-enter password" minlength="8" required>
               <span class="field-error" id="password2Error"></span>
             </div>
 
+            <!-- Address (optional) -->
             <div class="form-group">
               <label for="regAddress">Address (Optional)</label>
-              <textarea id="regAddress" rows="3" placeholder="123 Main Street, City, State, ZIP"></textarea>
+              <textarea id="regAddress" rows="3"
+                        placeholder="123 Main Street, City, State, ZIP"></textarea>
             </div>
 
             <div class="actions">

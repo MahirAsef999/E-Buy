@@ -35,7 +35,12 @@ NAME_RE = re.compile(r"^.{2,}$")
 
 
 def issue_token(user):
-    payload = {"id": user["id"], "email": user["email"], "first_name": user["first_name"], "last_name": user["last_name"]}
+    payload = {
+        "id": user["id"], 
+        "email": user["email"], 
+        "first_name": user["first_name"], 
+        "last_name": user["last_name"],
+        "address": user.get("address"),}
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
@@ -110,7 +115,7 @@ def login():
         conn = pool.get_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "SELECT id,  first_name, last_name, email "
+            "SELECT id,  first_name, last_name, email, address  "
             "FROM users "
             "WHERE email=%s AND password_hash=SHA2(%s,256) "
             "LIMIT 1",

@@ -7,6 +7,25 @@ function getAuthToken() {
     return localStorage.getItem("token");
 }
 
+// Decode JWT payload from token
+function parseJwt(token) {
+    if (!token) return null;
+    try {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Failed to parse JWT", e);
+        return null;
+    }
+}
+
 // Check authentication (login)
 function checkAuth() {
     const token = getAuthToken();
@@ -49,6 +68,19 @@ function showFieldError(fieldId, errorId, message) {
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
     if (!checkAuth()) return;
+
+    // NEW: prefill cardholder name from JWT (first_name + last_name)
+    const token = getAuthToken();
+    const user = parseJwt(token);
+    if (user) {
+        const holderInput = document.getElementById("cardholderName");
+        if (holderInput && !holderInput.value) {
+            const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+            if (fullName) {
+                holderInput.value = fullName;
+            }
+        }
+    }
 
     await loadPaymentMethods();
     setupEventListeners();
