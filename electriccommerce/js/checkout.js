@@ -1,7 +1,75 @@
+// Decode JWT payload from localStorage token
+function parseJwt(token) {
+  if (!token) return null;
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Failed to parse JWT", e);
+    return null;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const summaryEl = document.getElementById("order-summary");
   const calcEl = document.getElementById("order-calculations");
 
+  // ---------- NEW: AUTOFILL SHIPPING + PAYMENT ----------
+  const token = localStorage.getItem("token");
+  const user = parseJwt(token);
+
+  // Prefill shipping info from JWT (if logged in)
+  if (user) {
+    const firstInput = document.getElementById("first-name");
+    const lastInput = document.getElementById("last-name");
+    const emailInput = document.getElementById("email");
+    const addrInput = document.getElementById("address");
+
+    if (firstInput && !firstInput.value) {
+      firstInput.value = user.first_name || "";
+    }
+    if (lastInput && !lastInput.value) {
+      lastInput.value = user.last_name || "";
+    }
+    if (emailInput && !emailInput.value) {
+      emailInput.value = user.email || "";
+    }
+    if (addrInput && !addrInput.value && user.address) {
+      addrInput.value = user.address;
+    }
+  }
+
+  // Prefill card fields from default saved payment method (if any)
+  if (token) {
+    try {
+      const defaultMethod = await api("/payment-methods/default");
+      if (defaultMethod) {
+        const cardNumberEl = document.getElementById("card-number");
+        const expEl = document.getElementById("card-expiration");
+
+        if (cardNumberEl && !cardNumberEl.value) {
+          // Show masked card number
+          cardNumberEl.value = "**** **** **** " + defaultMethod.lastFourDigits;
+        }
+        if (expEl && !expEl.value) {
+          expEl.value = defaultMethod.expiryDate;
+        }
+      }
+    } catch (err) {
+      // 404 if no default card, 401 if not logged in, etc. -> ignore
+      console.warn("No default payment method found or not logged in.", err);
+    }
+  }
+  // ---------- END AUTOFILL BLOCK ----------
+
+  // ---------- EXISTING CART / TOTALS LOGIC ----------
   try {
     const cart = await api("/cart");
 
@@ -14,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let subtotal = 0;
     summaryEl.innerHTML = "";
 
-    cart.items.forEach(item => {
+    cart.items.forEach((item) => {
       const lineTotal = item.price * item.qty;
       subtotal += lineTotal;
 
@@ -59,9 +127,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const order = await api("/orders", { method: "POST" });
       await api("/payments/mock", {
         method: "POST",
-        body: JSON.stringify({ orderId: order.id })
+        body: JSON.stringify({ orderId: order.id }),
       });
-      alert("Order placed successfully! Order ID: " + order.id + "\nTotal: $" + order.total);
+      alert(
+        "Order placed successfully! Order ID: " +
+          order.id +
+          "\nTotal: $" +
+          order.total
+      );
       window.location.href = "main.html";
     } catch (e) {
       alert("Failed to place order.");

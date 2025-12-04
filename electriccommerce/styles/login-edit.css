@@ -1,9 +1,9 @@
-#main-container{
+#main-container {
     display: flex;
     flex-direction: column;
 }
 
-#submain-container{
+#submain-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -11,64 +11,70 @@
     padding: 10px;
 }
 
-#path-row{
+#path-row {
     display: flex;
     flex-direction: row;
     gap: 10px;
+    font-size: 18px;
 }
 
-#path-row a{
-    display: inline;
+#path-row a {
     text-decoration: none;
+    color: black;
 }
 
-#path-row a:hover{
+#path-row a:hover {
     text-decoration: underline;
 }
 
-#title-row{
-    font-size: 24px;
-    font-weight: 600;
+#title-row {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
 }
 
-#edit-container{
+#edit-container {
     display: flex;
     flex-direction: column;
-    width: fit-content;
+    width: 500px;
     border: 1px solid gray;
     border-radius: 10px;
     padding-top: 18px;
     padding-bottom: 18px;
-    gap: 14px;
+    gap: 25px;
+    background-color: #ffffff;
 }
 
-.title{
-    font-size: 20px;
+.title {
+    font-size: 22px;
     font-weight: 600;
 }
 
-.edit-box{
+.edit-box {
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    justify-content: space-between;
     align-items: flex-end;
     padding-left: 20px;
     padding-right: 20px;
+    padding-bottom: 10px;
 }
 
-.edit-row{
-    padding-left: 5px;
-    padding-right: 5px;
+.input-container {
+    display: flex;
+    flex-direction: column;
+    width: 70%;
 }
 
-.border-bottom{
-    padding-bottom: 20px;
-    border-bottom: 1px rgb(192, 191, 191) solid;
-}
-
-.edit-row input{
+.edit-row input {
     font-size: 18px;
     padding: 6px;
+    width: 140%;
+}
+
+.border-bottom {
+    border-bottom: 1px rgb(192, 191, 191) solid;
+    padding-bottom: 20px;
 }
 
 .save-changes{

@@ -12,10 +12,17 @@ FLUSH PRIVILEGES;
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(120) NOT NULL,
+  first_name VARCHAR(120) NOT NULL,
+  last_name  VARCHAR(120) NOT NULL,
   email VARCHAR(190) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   address TEXT NULL,
+  shipping_street VARCHAR(255) NULL,
+  shipping_city   VARCHAR(120) NULL,
+  shipping_state  VARCHAR(80)  NULL,
+  shipping_zip    VARCHAR(20)  NULL,
+  shipping_phone  VARCHAR(50)  NULL,
+
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -46,7 +53,7 @@ INSERT INTO products (id, name, price) VALUES
   ('Switch2', 'Switch 2', 499.00),
   ('PlayStation5', 'PlayStation 5', 599.00),
   ('XboxS', 'Xbox Series S', 399.00),
-  ('OutDatedGameBoy', 'Game Boy', 59.00),
+  ('OutDatedGameBoy', 'Game Boy', 59.00), 
   ('Headphones', 'Headphones', 49.00),
   ('IPad', 'Tablet / iPad', 299.00),
   ('GamingDesktop', 'Gaming Desktop', 999.00),
@@ -94,7 +101,6 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX idx_orders_user_created
   ON orders (user_id, created_at DESC);
 
-
 -- Order Items Table
 CREATE TABLE IF NOT EXISTS order_items (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -110,7 +116,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE INDEX idx_order_items_order
   ON order_items (order_id);
-
 
 -- Payment Methods Table
 CREATE TABLE IF NOT EXISTS payment_methods (

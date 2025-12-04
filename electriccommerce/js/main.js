@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await updateCartBadge();
   setupProductCards();
 
+<<<<<<< HEAD
   acctBtn = document.getElementById("account-box");
 
   acctBtn.addEventListener("click", async () => {
@@ -26,4 +27,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     })
   })
 
+=======
+  const acctBtn = document.getElementById("account-box");
+  if (acctBtn) {
+    acctBtn.addEventListener("click", () => {
+      window.location.href = "dashboard.html";
+    });
+  }
+>>>>>>> 84eb68239a3804420ea2c109e29d8ac2baff7793
 });
