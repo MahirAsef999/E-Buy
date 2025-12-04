@@ -1,41 +1,49 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8" />
     <title>Your Address</title>
-    <link rel="stylesheet" href="../styles/address-edit.css" type="text/css"/>
+    <link rel="stylesheet" href="../styles/address-edit.css" type="text/css" />
 </head>
 <body>
     <div id="main-container">
         <div id="submain-container">
             <div id="path-row">
-                <a href="./account-view.html">Your Account></a>
+                <a href="./main.html">E-Buy</a>
+                <span>&gt;</span>
+                <a href="./dashboard.html">Your Account</a>
+                <span>&gt;</span>
                 <span>Address</span>
             </div>
+
             <div id="title-row">
                 Address
             </div>
+
             <div id="edit-container">
+                <!-- Street -->
                 <div class="edit-box border-bottom">
                     <div id="street-row" class="edit-row">
                         <div class="title">Street</div>
-                        <input type="text" id="name-input"/>
+                        <input type="text" id="street-input" />
                     </div>
                     <button class="save-changes">Save Change</button>
                 </div>
+
+                <!-- City -->
                 <div class="edit-box border-bottom">
                     <div id="city-row" class="edit-row">
                         <div class="title">City</div>
-                        <input type="text" id="city-input "/>
+                        <input type="text" id="city-input" />
                     </div>
                     <button class="save-changes">Save Change</button>
                 </div>
+
+                <!-- State (US or Not in the United States) -->
                 <div class="edit-box border-bottom">
                     <div id="state-row" class="edit-row">
                         <div class="title">State</div>
-                        <select id="state-lists">
-                            <option value=""></option>
+                        <select id="state-select">
                             <option value="AL">Alabama</option>
                             <option value="AK">Alaska</option>
                             <option value="AZ">Arizona</option>
@@ -87,20 +95,43 @@
                             <option value="WV">West Virginia</option>
                             <option value="WI">Wisconsin</option>
                             <option value="WY">Wyoming</option>
+                            <option value="NON_US">Not in the United States</option>
                         </select>
                     </div>
                     <button class="save-changes">Save Change</button>
                 </div>
+
+                <!-- Non-US: State/Province -->
+                <div class="edit-box border-bottom non-us-box" id="province-box">
+                    <div id="province-row" class="edit-row">
+                        <div class="title">State/Province</div>
+                        <input type="text" id="province-input" />
+                    </div>
+                    <button class="save-changes">Save Change</button>
+                </div>
+
+                <!-- Non-US: Country -->
+                <div class="edit-box border-bottom non-us-box" id="country-box">
+                    <div id="country-row" class="edit-row">
+                        <div class="title">Country</div>
+                        <input type="text" id="country-input" />
+                    </div>
+                    <button class="save-changes">Save Change</button>
+                </div>
+
+                <!-- Zip Code -->
                 <div class="edit-box">
                     <div id="zip-row" class="edit-row">
                         <div class="title">Zip Code</div>
-                        <input type="text" id="zip-input"/>
+                        <input type="text" id="zip-input" />
                     </div>
                     <button class="save-changes">Save Change</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="../js/address-edit.js"></script>
 </body>
 </html>
 =======
@@ -240,4 +271,3 @@
     <script src="../js/address-edit.js"></script>
 </body>
 </html>
->>>>>>> 84eb68239a3804420ea2c109e29d8ac2baff7793
