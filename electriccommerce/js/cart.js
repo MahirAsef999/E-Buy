@@ -51,7 +51,7 @@ function createProductRow(item) {
   const qty = item.qty;
 
   const row = document.createElement("div");
-  row.className = "product-row";
+  row.className = "cart-product-row";
   row.dataset.productId = productId;
 
   const imgDiv = document.createElement("div");
