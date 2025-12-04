@@ -180,8 +180,9 @@ function closeCart() {
   if (modal) modal.style.display = "none";
 }
 
-// Checkout (same as before)
+// Checkout 
 async function checkout() {
   closeCart();
   window.location.href = "checkout.html";
 }
+
