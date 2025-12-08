@@ -45,7 +45,6 @@
                 <div class="edit-box border-bottom">
                     <div id="email-row" class="edit-row">
                         <div class="title">Email</div>
-                        <!-- removed trailing space in id -->
                         <input type="email" id="email-input" />
                     </div>
                     <button class="save-changes">Save Change</button>
@@ -72,6 +71,8 @@
         </div>
     </div>
 
-     <script src="../js/login-edit.js"></script>
+    <!-- ✅ CRITICAL: Load api.js FIRST, then login-edit.js -->
+    <script src="../js/api.js"></script>    
+    <script src="../js/login-edit.js"></script>
 </body>
 </html>

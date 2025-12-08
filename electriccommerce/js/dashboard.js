@@ -1,4 +1,25 @@
-document.addEventListener("DOMContentLoaded", () => {
+/**
+ * dashboard.js - FIXED VERSION
+ * Loads user name from database and displays welcome message
+ */
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ Load user info from database
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const account = await authedApi("/account/me");
+      
+      // Update welcome message
+      const greetingEl = document.getElementById("account-greeting");
+      if (greetingEl && account.first_name) {
+        greetingEl.textContent = `Welcome, ${account.first_name}!`;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load user info:", err);
+  }
+
   // Login & Security 
   const loginBox = document.getElementById("login-security");
   if (loginBox) {

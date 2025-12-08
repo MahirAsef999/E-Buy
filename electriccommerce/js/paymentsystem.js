@@ -1,41 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api";
-
 let editingPaymentId = null;
-
-// Get JWT token
-function getAuthToken() {
-    return localStorage.getItem("token");
-}
-
-// Decode JWT payload from token
-function parseJwt(token) {
-    if (!token) return null;
-    try {
-        const base64Url = token.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split("")
-                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                .join("")
-        );
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Failed to parse JWT", e);
-        return null;
-    }
-}
-
-// Check authentication (login)
-function checkAuth() {
-    const token = getAuthToken();
-    if (!token) {
-        alert("Please log in to manage payment methods.");
-        window.location.href = "loginauth.html";
-        return false;
-    }
-    return true;
-}
 
 // Clear all errors
 function clearErrors() {
@@ -52,7 +15,6 @@ function clearErrors() {
         if (el) el.textContent = "";
     });
 
-    // Remove error styling
     document.querySelectorAll(".error").forEach((el) => el.classList.remove("error"));
 }
 
@@ -67,10 +29,15 @@ function showFieldError(fieldId, errorId, message) {
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
-    if (!checkAuth()) return;
+    // ✅ REQUIRE AUTHENTICATION
+    try {
+        await requireAuth();
+    } catch (error) {
+        return;
+    }
 
-    // NEW: prefill cardholder name from JWT (first_name + last_name)
-    const token = getAuthToken();
+    // Prefill cardholder name from JWT
+    const token = localStorage.getItem("token");
     const user = parseJwt(token);
     if (user) {
         const holderInput = document.getElementById("cardholderName");
@@ -240,65 +207,38 @@ async function handleFormSubmit(e) {
 
     if (hasError) return;
 
-    const token = getAuthToken();
-
     try {
-        let response;
-        const headers = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-        };
-
         if (editingPaymentId) {
-            // Update existing card
-            response = await fetch(`${API_URL}/payment-methods/${editingPaymentId}`, {
+            // ✅ Use authedApi
+            await authedApi(`/payment-methods/${editingPaymentId}`, {
                 method: "PUT",
-                headers,
                 body: JSON.stringify(formData),
             });
+            alert("Payment updated!");
         } else {
-            // Create new card
-            response = await fetch(`${API_URL}/payment-methods`, {
+            // ✅ Use authedApi
+            await authedApi("/payment-methods", {
                 method: "POST",
-                headers,
                 body: JSON.stringify(formData),
             });
+            alert("Payment added!");
         }
-
-        if (response.ok) {
-            alert(editingPaymentId ? "Payment updated!" : "Payment added!");
-            resetForm();
-            await loadPaymentMethods();
-        } else {
-            alert("Error: " + (await response.text()));
-        }
+        resetForm();
+        await loadPaymentMethods();
     } catch (err) {
         console.error("Save error:", err);
-        alert("An error occurred.");
+        alert("An error occurred: " + err.message);
     }
 }
 
 // Load payment methods
 async function loadPaymentMethods() {
-    const token = getAuthToken();
     const container = document.getElementById("methods-list");
 
     try {
-        const response = await fetch(`${API_URL}/payment-methods`, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            },
-        });
-
-        if (response.ok) {
-            const methods = await response.json();
-            displayPaymentMethods(methods);
-        } else if (response.status === 401) {
-            alert("Session expired, log in again.");
-            window.location.href = "loginauth.html";
-        } else {
-            container.innerHTML = "<p class='no-payments'>Failed to load methods.</p>";
-        }
+        // ✅ Use authedApi
+        const methods = await authedApi("/payment-methods");
+        displayPaymentMethods(methods);
     } catch (err) {
         console.error("Error loading:", err);
         container.innerHTML = "<p class='no-payments'>Error loading methods.</p>";
@@ -341,19 +281,9 @@ function displayPaymentMethods(methods) {
 
 // Edit payment method
 async function editPaymentMethod(id) {
-    const token = getAuthToken();
-
     try {
-        const response = await fetch(`${API_URL}/payment-methods/${id}`, {
-            headers: { "Authorization": `Bearer ${token}` },
-        });
-
-        if (!response.ok) {
-            alert("Failed to load card.");
-            return;
-        }
-
-        const method = await response.json();
+        // ✅ Use authedApi
+        const method = await authedApi(`/payment-methods/${id}`);
 
         document.getElementById("payment-id").value = id;
         document.getElementById("cardType").value = method.cardType;
@@ -381,20 +311,13 @@ async function editPaymentMethod(id) {
 async function deletePaymentMethod(id) {
     if (!confirm("Delete this payment method?")) return;
 
-    const token = getAuthToken();
-
     try {
-        const response = await fetch(`${API_URL}/payment-methods/${id}`, {
+        // ✅ Use authedApi
+        await authedApi(`/payment-methods/${id}`, {
             method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` },
         });
-
-        if (response.ok) {
-            alert("Deleted.");
-            await loadPaymentMethods();
-        } else {
-            alert("Delete failed.");
-        }
+        alert("Deleted.");
+        await loadPaymentMethods();
     } catch (err) {
         console.error("Delete error:", err);
         alert("An error occurred.");

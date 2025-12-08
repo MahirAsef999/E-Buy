@@ -1,3 +1,9 @@
+/**
+ * products.js - FIXED VERSION
+ * Checks authentication before adding to cart
+ * Uses authedApi() for POST /cart/items
+ */
+
 // State for product detail modal
 let currentProductId = null;
 
@@ -48,17 +54,32 @@ async function addCurrentProductToCart() {
   closeProductModal();
 }
 
-// Add item to cart from product grid or modal
+// ✅ FIXED: Add item to cart with authentication check
 async function myItem(itemName, qty = 1) {
   try {
-    await api("/cart/items", {
+    // ✅ FIX 1: Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in to add items to your cart.");
+      window.location.href = "loginauth.html";
+      return;
+    }
+
+    // ✅ FIX 2: Use authedApi instead of api
+    await authedApi("/cart/items", {
       method: "POST",
       body: JSON.stringify({ productId: itemName, qty: qty })
     });
+    
     alert(itemName + " added to cart");
-    await updateCartBadge();
+    
+    // Update cart badge
+    if (typeof updateCartBadge === 'function') {
+      await updateCartBadge();
+    }
   } catch (e) {
-    alert("Add failed");
+    console.error("Failed to add item:", e);
+    alert("Add failed: " + e.message);
   }
 }
 
@@ -73,4 +94,9 @@ window.addEventListener("click", function(event) {
   if (event.target === productModal) {
     closeProductModal();
   }
+});
+
+// ✅ INITIALIZE PRODUCT CARDS WHEN PAGE LOADS
+document.addEventListener("DOMContentLoaded", () => {
+  setupProductCards();
 });

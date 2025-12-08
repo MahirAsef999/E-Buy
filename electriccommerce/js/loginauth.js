@@ -1,3 +1,10 @@
+/**
+ * loginauth.js - User login handler
+ * ✅ PRODUCTION-READY with proper error handling
+ * ✅ Only stores JWT token - all user data comes from database via API
+ * ✅ Session persists across browser sessions until token expires
+ */
+
 async function postJSON(path, body) {
   return api(path, {
     method: "POST",
@@ -5,45 +12,36 @@ async function postJSON(path, body) {
   });
 }
 
-// Clear all error messages
 function clearErrors() {
   document.getElementById("emailError").textContent = "";
   document.getElementById("passwordError").textContent = "";
-  document.getElementById("loginMsg").textContent = "";
-  document.getElementById("loginMsg").className = "muted";
-  
-  // Remove error styling
+  const msg = document.getElementById("loginMsg");
+  msg.textContent = "";
+  msg.className = "muted";
+  msg.style.display = "none";
   document.getElementById("loginEmail").classList.remove("error");
   document.getElementById("loginPassword").classList.remove("error");
 }
 
-// Show error message below specific field
 function showFieldError(fieldId, errorId, message) {
-  const errorElement = document.getElementById(errorId);
-  const fieldElement = document.getElementById(fieldId);
-  
-  errorElement.textContent = message;
-  fieldElement.classList.add("error");
+  document.getElementById(errorId).textContent = message;
+  document.getElementById(fieldId).classList.add("error");
 }
 
-// Validate email format
 function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Handle login form submission
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   clearErrors();
-  
+
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
   const msg = document.getElementById("loginMsg");
-  
   let hasError = false;
 
-  // Validate email
+  // ✅ CLIENT-SIDE VALIDATION
   if (!email) {
     showFieldError("loginEmail", "emailError", "Email is required");
     hasError = true;
@@ -52,7 +50,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     hasError = true;
   }
 
-  // Validate password
   if (!password) {
     showFieldError("loginPassword", "passwordError", "Password is required");
     hasError = true;
@@ -63,55 +60,108 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   if (hasError) return;
 
+  // ✅ Disable button to prevent double submission
+  const submitBtn = document.getElementById("loginBtn");
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Signing in...";
+
   try {
+    // ✅ LOGIN REQUEST - validates against database
     const data = await postJSON("/auth/login", { email, password });
     
-    // Save token to localStorage
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    
+    // ✅ ONLY store the JWT token - nothing else!
+    // Token persists across browser sessions until it expires
+    // All user data will be fetched from database when needed
+    localStorage.setItem("token", data.token);
+
     msg.className = "success";
-    msg.textContent = "Login successful! Redirecting...";
-    
-    console.log("Logged in user:", data.user);
-    
-    // Redirect to main page after 1 second
+    msg.style.display = "block";
+    msg.textContent = "✓ Login successful! Redirecting...";
+    console.log("✓ User logged in successfully:", email);
+
+    // ✅ Redirect to dashboard after short delay
     setTimeout(() => {
-      window.location.href = "main.html";
-    }, 1000);
+      window.location.href = "dashboard.html";
+    }, 800);
+
+  } catch (err) {
+    console.error("Login failed:", err);
     
-  } catch (e) {
+    // ✅ Re-enable button
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    
     msg.className = "error";
-    msg.textContent = e.message || "Login failed. Please check your credentials.";
+    msg.style.display = "block";
+    
+    // ✅ SHOW USER-FRIENDLY ERROR MESSAGES
+    const errorMessage = err.message.toLowerCase();
+    
+    if (errorMessage.includes("invalid credentials") || 
+        errorMessage.includes("401") || 
+        errorMessage.includes("unauthorized")) {
+      msg.textContent = "✗ Incorrect email or password. Please try again.";
+      showFieldError("loginEmail", "emailError", " ");
+      showFieldError("loginPassword", "passwordError", "Check your credentials");
+    } 
+    else if (errorMessage.includes("network")) {
+      msg.textContent = "✗ Unable to connect to server. Please check your internet connection.";
+    }
+    else if (errorMessage.includes("server error")) {
+      msg.textContent = "✗ Server error. Please try again in a few moments.";
+    }
+    else {
+      msg.textContent = "✗ " + (err.message || "Login failed. Please try again.");
+    }
   }
 });
 
-// Real-time validation - clear error when user starts typing
-document.getElementById("loginEmail").addEventListener("input", function() {
+// ✅ Clear errors on input
+document.getElementById("loginEmail").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("emailError").textContent = "";
     this.classList.remove("error");
+    const msg = document.getElementById("loginMsg");
+    if (msg.className === "error") {
+      msg.style.display = "none";
+    }
   }
 });
 
-document.getElementById("loginPassword").addEventListener("input", function() {
+document.getElementById("loginPassword").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("passwordError").textContent = "";
     this.classList.remove("error");
+    const msg = document.getElementById("loginMsg");
+    if (msg.className === "error") {
+      msg.style.display = "none";
+    }
   }
 });
 
-// Clear button
 document.getElementById("loginClear").addEventListener("click", () => {
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginPassword").value = "";
   clearErrors();
 });
 
-// Check if already logged in
-window.addEventListener('DOMContentLoaded', () => {
+// ✅ REDIRECT IF ALREADY LOGGED IN
+// This checks if user has valid session (token validated against database)
+window.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('token');
   if (token) {
-    window.location.href = "main.html";
+    try {
+      // ✅ Validate token by fetching user data from database
+      // If token is valid, user data will be returned
+      // If token expired or invalid, this will throw error and clear token
+      await authedApi('/account/me');
+      console.log('✓ Already logged in with valid session, redirecting to dashboard');
+      window.location.href = "dashboard.html";
+    } catch (error) {
+      // ✅ Token is invalid/expired, clear it and stay on login page
+      console.log('✗ Session expired, clearing token');
+      localStorage.removeItem('token');
+    }
   }
 });

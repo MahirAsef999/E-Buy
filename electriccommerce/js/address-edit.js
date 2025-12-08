@@ -1,76 +1,102 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const streetInput   = document.getElementById("street-input");
-  const cityInput     = document.getElementById("city-input");
-  const stateSelect   = document.getElementById("state-select");
-  const provinceInput = document.getElementById("province-input");
-  const countryInput  = document.getElementById("country-input");
-  const zipInput      = document.getElementById("zip-input");
-
-  const provinceBox = document.getElementById("province-box");
-  const countryBox  = document.getElementById("country-box");
-
-  const STORAGE_KEY = "ebuy_address";
-
-  // --- helpers ---
-
-  function toggleNonUsFields() {
-    const isNonUs = stateSelect.value === "NON_US";
-    provinceBox.style.display = isNonUs ? "flex" : "none";
-    countryBox.style.display  = isNonUs ? "flex" : "none";
+document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ REQUIRE AUTHENTICATION
+  try {
+    await requireAuth();
+  } catch (error) {
+    return;
   }
 
-  function loadFromStorage() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+  // ✅ Load existing address FROM DATABASE
+  try {
+    const account = await authedApi("/account/me");
 
-      const data = JSON.parse(raw);
+    console.log("Loaded account data:", account); // Debug log
 
-      if (data.street)   streetInput.value   = data.street;
-      if (data.city)     cityInput.value     = data.city;
-      if (data.state)    stateSelect.value   = data.state;
-      if (data.province) provinceInput.value = data.province;
-      if (data.country)  countryInput.value  = data.country;
-      if (data.zip)      zipInput.value      = data.zip;
-    } catch (e) {
-      console.error("Failed to load address from storage", e);
+    // Load US address fields
+    if (account.shipping_street) {
+      document.getElementById("street-input").value = account.shipping_street;
     }
-  }
-
-  function saveToStorage() {
-    const payload = {
-      street:   streetInput.value.trim(),
-      city:     cityInput.value.trim(),
-      state:    stateSelect.value,
-      province: provinceInput.value.trim(),
-      country:  countryInput.value.trim(),
-      zip:      zipInput.value.trim()
-    };
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      alert("Address saved (demo only — this would go to SQL later).");
-    } catch (e) {
-      console.error("Failed to save address", e);
-      alert("Could not save address.");
+    if (account.shipping_city) {
+      document.getElementById("city-input").value = account.shipping_city;
     }
-  }
+    if (account.shipping_state) {
+      document.getElementById("state-select").value = account.shipping_state;
+    }
+    if (account.shipping_zip) {
+      document.getElementById("zip-input").value = account.shipping_zip;
+    }
 
-  // --- wire up events ---
+    // ✅ Load NON-US fields (province/country) from database
+    const provinceInput = document.getElementById("province-input");
+    const countryInput = document.getElementById("country-input");
+    
+    if (account.shipping_province && provinceInput) {
+      provinceInput.value = account.shipping_province;
+    }
+    if (account.shipping_country && countryInput) {
+      countryInput.value = account.shipping_country;
+    }
 
-  stateSelect.addEventListener("change", () => {
     toggleNonUsFields();
-  });
+  } catch (err) {
+    console.error("Failed to load address:", err);
+    alert("Could not load address information: " + err.message);
+  }
 
-  // Every "Save Change" just saves the whole address object
-  document.querySelectorAll(".save-changes").forEach(btn => {
-    btn.addEventListener("click", (evt) => {
+  // State selector toggle
+  const stateSelect = document.getElementById("state-select");
+  stateSelect.addEventListener("change", toggleNonUsFields);
+
+  // Save buttons
+  document.querySelectorAll(".save-changes").forEach((btn) => {
+    btn.addEventListener("click", async (evt) => {
       evt.preventDefault();
-      saveToStorage();
+      await saveAddress();
     });
   });
-
-  // initial setup
-  loadFromStorage();
-  toggleNonUsFields();
 });
+
+async function saveAddress() {
+  const payload = {
+    shipping_street: document.getElementById("street-input").value.trim(),
+    shipping_city: document.getElementById("city-input").value.trim(),
+    shipping_state: document.getElementById("state-select").value,
+    shipping_zip: document.getElementById("zip-input").value.trim(),
+  };
+
+  // ✅ SAVE province/country to database
+  const provinceInput = document.getElementById("province-input");
+  const countryInput = document.getElementById("country-input");
+  
+  if (provinceInput) {
+    payload.shipping_province = provinceInput.value.trim();
+  }
+  if (countryInput) {
+    payload.shipping_country = countryInput.value.trim();
+  }
+
+  console.log("Saving address data:", payload); // Debug log
+
+  try {
+    const response = await authedApi("/account/me", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    
+    console.log("Save response:", response); // Debug log
+    alert("Address saved successfully!");
+  } catch (err) {
+    console.error("Failed to save address:", err);
+    alert("Could not save address: " + err.message);
+  }
+}
+
+function toggleNonUsFields() {
+  const stateSelect = document.getElementById("state-select");
+  const provinceBox = document.getElementById("province-box");
+  const countryBox = document.getElementById("country-box");
+  const isNonUs = stateSelect.value === "NON_US";
+
+  if (provinceBox) provinceBox.style.display = isNonUs ? "flex" : "none";
+  if (countryBox) countryBox.style.display = isNonUs ? "flex" : "none";
+}

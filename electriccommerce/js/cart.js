@@ -1,7 +1,14 @@
-// update cart badge in header
+/**
+ * cart.js - FIXED VERSION
+ * Uses authedApi() for authentication
+ * Uses cart_item_id (item.id) for PATCH/DELETE operations
+ */
+
+// Update cart badge in header
 async function updateCartBadge() {
   try {
-    const cart = await api("/cart");
+    // ✅ FIX: Use authedApi instead of api
+    const cart = await authedApi("/cart");
     const itemCount = cart.items.length;
     const badge = document.getElementById("cartBadge");
 
@@ -26,7 +33,8 @@ async function loadCart() {
   container.innerHTML = '<div class="empty-message">Loading cart...</div>';
 
   try {
-    const cart = await api("/cart");
+    // ✅ FIX: Use authedApi instead of api
+    const cart = await authedApi("/cart");
 
     if (!cart.items.length) {
       container.innerHTML = '<div class="empty-message">Your cart is empty.</div>';
@@ -41,17 +49,21 @@ async function loadCart() {
 
     updateSummary(cart.subtotal);
   } catch (e) {
+    console.error("Error loading cart:", e);
     container.innerHTML = '<div class="empty-message">Error loading cart.</div>';
   }
 }
 
 function createProductRow(item) {
+  // ✅ FIX: Extract cart_item_id from item.id (NOT productId)
+  const cartItemId = item.id;  // This is the cart_items.id from database
   const productId = item.productId;
   const price = item.price;
   const qty = item.qty;
 
   const row = document.createElement("div");
   row.className = "cart-product-row";
+  row.dataset.cartItemId = cartItemId;  // Store cart item ID
   row.dataset.productId = productId;
 
   const imgDiv = document.createElement("div");
@@ -65,7 +77,7 @@ function createProductRow(item) {
   descDiv.className = "product_description";
 
   const title = document.createElement("h3");
-  title.textContent = productId;
+  title.textContent = item.productName || productId;
 
   const priceDiv = document.createElement("div");
   priceDiv.className = "product_price";
@@ -108,45 +120,51 @@ function createProductRow(item) {
   row.appendChild(descDiv);
   row.appendChild(delBtn);
 
-  // handlers (same behavior as before)
+  // ✅ FIX: Pass cartItemId (NOT productId) to change/remove functions
   minus.addEventListener("click", () =>
-    changeQty(productId, parseInt(input.value || "1", 10) - 1)
+    changeQty(cartItemId, parseInt(input.value || "1", 10) - 1)
   );
   plus.addEventListener("click", () =>
-    changeQty(productId, parseInt(input.value || "1", 10) + 1)
+    changeQty(cartItemId, parseInt(input.value || "1", 10) + 1)
   );
-  delBtn.addEventListener("click", () => removeItem(productId));
+  delBtn.addEventListener("click", () => removeItem(cartItemId));
 
   return row;
 }
 
-async function changeQty(productId, newQty) {
+// ✅ FIX: Use cartItemId and authedApi
+async function changeQty(cartItemId, newQty) {
   if (newQty <= 0) {
     if (confirm("Remove this item from cart?")) {
-      await removeItem(productId);
+      await removeItem(cartItemId);
     }
     return;
   }
   try {
-    await api(`/cart/items/${productId}`, {
+    // ✅ FIX: Use authedApi and cartItemId in URL
+    await authedApi(`/cart/items/${cartItemId}`, {
       method: "PATCH",
       body: JSON.stringify({ qty: newQty })
     });
     await loadCart();
     await updateCartBadge();
   } catch (e) {
+    console.error("Failed to update quantity:", e);
     alert("Failed to update quantity");
   }
 }
 
-async function removeItem(productId) {
+// ✅ FIX: Use cartItemId and authedApi
+async function removeItem(cartItemId) {
   try {
-    await api(`/cart/items/${productId}`, {
+    // ✅ FIX: Use authedApi and cartItemId in URL
+    await authedApi(`/cart/items/${cartItemId}`, {
       method: "DELETE"
     });
     await loadCart();
     await updateCartBadge();
   } catch (e) {
+    console.error("Failed to remove item:", e);
     alert("Failed to remove item");
   }
 }
@@ -162,10 +180,10 @@ function updateSummary(subtotal) {
   const taxEl = document.getElementById("order-tax");
   const totalEl = document.getElementById("order-total");
 
-  if (subEl) subEl.textContent = `Subtotal: $${subtotal}`;
-  if (shipEl) shipEl.textContent = `Shipping: $${shipping}`;
-  if (taxEl) taxEl.textContent = `Tax: $${tax}`;
-  if (totalEl) totalEl.textContent = `Total: $${total}`;
+  if (subEl) subEl.textContent = `Subtotal: $${subtotal.toFixed(2)}`;
+  if (shipEl) shipEl.textContent = `Shipping: $${shipping.toFixed(2)}`;
+  if (taxEl) taxEl.textContent = `Tax: $${tax.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `Total: $${total.toFixed(2)}`;
 }
 
 async function openCart() {
@@ -180,9 +198,8 @@ function closeCart() {
   if (modal) modal.style.display = "none";
 }
 
-// Checkout 
+// Checkout
 async function checkout() {
   closeCart();
   window.location.href = "checkout.html";
 }
-

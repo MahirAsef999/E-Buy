@@ -35,17 +35,51 @@ NAME_RE = re.compile(r"^.{2,}$")
 
 
 def issue_token(user):
+    """
+    Generate JWT token for authenticated user.
+    
+    Args:
+        user (dict): User data from database
+        
+    Returns:
+        str: Encoded JWT token
+    """
     payload = {
-        "id": user["id"], 
-        "email": user["email"], 
-        "first_name": user["first_name"], 
+        "id": user["id"],
+        "email": user["email"],
+        "first_name": user["first_name"],
         "last_name": user["last_name"],
-        "address": user.get("address"),}
+        "address": user.get("address"),
+    }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+
+
+def get_user_id_from_token():
+    """
+    Extract and validate user ID from JWT token.
+    
+    Returns:
+        int: User ID from token
+        
+    Raises:
+        401: If token is missing, invalid, or expired
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        abort(401, "Missing or invalid Authorization header")
+
+    token = auth_header.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except jwt.InvalidTokenError:
+        abort(401, "Invalid token")
+
+    return payload.get("id")
 
 
 @app.get("/api/health")
 def health():
+    """Health check endpoint."""
     return jsonify({"ok": True})
 
 
@@ -53,6 +87,18 @@ def health():
 
 @app.post("/api/auth/register")
 def register():
+    """
+    Register a new user account.
+    
+    Required fields: first_name, last_name, email, password
+    Optional fields: address
+    
+    Returns:
+        201: User created successfully
+        400: Validation error
+        409: Email already exists
+        500: Server error
+    """
     data = request.get_json(silent=True) or {}
     first_name = (data.get("first_name") or "").strip()
     last_name = (data.get("last_name") or "").strip()
@@ -78,17 +124,19 @@ def register():
         conn = pool.get_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "INSERT INTO users (first_name, last_name, email, password_hash, address) "
-            "VALUES (%s ,%s, %s, SHA2(%s,256), %s)",
+            """
+            INSERT INTO users (first_name, last_name, email, password_hash, address)
+            VALUES (%s, %s, %s, SHA2(%s,256), %s)
+            """,
             (first_name, last_name, email, password, address),
         )
         conn.commit()
-        return jsonify({"id": cur.lastrowid, "email": email})
+        return jsonify({"id": cur.lastrowid, "email": email}), 201
     except MySQLError as e:
         if getattr(e, "errno", None) == 1062:
-            return "Email already registered", 409
+            return jsonify({"errors": [{"msg": "Email already registered"}]}), 409
         app.logger.exception(e)
-        return "Server error", 500
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
     finally:
         try:
             cur.close()
@@ -99,6 +147,17 @@ def register():
 
 @app.post("/api/auth/login")
 def login():
+    """
+    Authenticate user and return JWT token.
+    
+    Required fields: email, password
+    
+    Returns:
+        200: Login successful with token
+        400: Validation error
+        401: Invalid credentials
+        500: Server error
+    """
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
@@ -115,21 +174,183 @@ def login():
         conn = pool.get_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "SELECT id,  first_name, last_name, email, address  "
-            "FROM users "
-            "WHERE email=%s AND password_hash=SHA2(%s,256) "
-            "LIMIT 1",
+            """
+            SELECT id, first_name, last_name, email, address,
+                   shipping_street, shipping_city, shipping_state,
+                   shipping_zip, shipping_phone
+            FROM users
+            WHERE email=%s AND password_hash=SHA2(%s,256)
+            LIMIT 1
+            """,
             (email, password),
         )
         row = cur.fetchone()
         if not row:
-            return "Invalid credentials", 401
+            return jsonify({"errors": [{"msg": "Invalid credentials"}]}), 401
 
         token = issue_token(row)
         return jsonify({"token": token, "user": row})
     except MySQLError as e:
         app.logger.exception(e)
-        return "Server error", 500
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+
+# ---------- ACCOUNT ROUTES (PROFILE / ADDRESS / LOGIN INFO) ----------
+
+@app.get("/api/account/me")
+def get_account():
+    """
+    Get current user's account information.
+    Requires authentication.
+    
+    Returns:
+        200: User profile data
+        401: Not authenticated
+        404: User not found
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT id, first_name, last_name, email, address,
+                   shipping_street, shipping_city, shipping_state,
+                   shipping_zip, shipping_phone
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            abort(404, "User not found")
+
+        return jsonify(row)
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+
+@app.put("/api/account/me")
+def update_account():
+    """
+    Update current user's account information.
+    Requires authentication.
+    
+    Accepted fields: first_name, last_name, email, password,
+                     address, shipping_street, shipping_city, 
+                     shipping_state, shipping_zip, shipping_phone
+    
+    Returns:
+        200: Update successful
+        400: Validation error
+        401: Not authenticated
+        409: Email already taken
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    data = request.get_json(silent=True) or {}
+
+    updates = []
+    params = []
+
+    # First name
+    if "first_name" in data:
+        first_name = (data.get("first_name") or "").strip()
+        if not NAME_RE.match(first_name):
+            return jsonify({"errors": [{"msg": "First name must be at least 2 characters"}]}), 400
+        updates.append("first_name = %s")
+        params.append(first_name)
+
+    # Last name
+    if "last_name" in data:
+        last_name = (data.get("last_name") or "").strip()
+        if not NAME_RE.match(last_name):
+            return jsonify({"errors": [{"msg": "Last name must be at least 2 characters"}]}), 400
+        updates.append("last_name = %s")
+        params.append(last_name)
+
+    # Email
+    if "email" in data:
+        email = (data.get("email") or "").strip().lower()
+        try:
+            validate_email(email)
+        except EmailNotValidError:
+            return jsonify({"errors": [{"msg": "Invalid email"}]}), 400
+        updates.append("email = %s")
+        params.append(email)
+
+    # Plain address (optional text)
+    if "address" in data:
+        addr = (data.get("address") or "").strip() or None
+        updates.append("address = %s")
+        params.append(addr)
+
+    # Shipping fields (used by address-edit and checkout)
+    if "shipping_street" in data:
+        updates.append("shipping_street = %s")
+        params.append((data.get("shipping_street") or "").strip())
+
+    if "shipping_city" in data:
+        updates.append("shipping_city = %s")
+        params.append((data.get("shipping_city") or "").strip())
+
+    if "shipping_state" in data:
+        updates.append("shipping_state = %s")
+        params.append((data.get("shipping_state") or "").strip())
+
+    if "shipping_zip" in data:
+        updates.append("shipping_zip = %s")
+        params.append((data.get("shipping_zip") or "").strip())
+
+    if "shipping_phone" in data:
+        updates.append("shipping_phone = %s")
+        params.append((data.get("shipping_phone") or "").strip())
+
+    # Password
+    if "password" in data:
+        password = data.get("password") or ""
+        if len(password) < 8:
+            return jsonify({"errors": [{"msg": "Password must be at least 8 characters"}]}), 400
+        updates.append("password_hash = SHA2(%s,256)")
+        params.append(password)
+
+    if not updates:
+        return jsonify({"errors": [{"msg": "No fields to update"}]}), 400
+
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor()
+
+        query = f"UPDATE users SET {', '.join(updates)} WHERE id = %s"
+        params.append(user_id)
+
+        cur.execute(query, params)
+        conn.commit()
+
+        return jsonify({"ok": True})
+    except MySQLError as e:
+        # Handle duplicate email
+        if getattr(e, "errno", None) == 1062:
+            return jsonify({"errors": [{"msg": "Email already registered"}]}), 409
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
     finally:
         try:
             cur.close()
@@ -140,269 +361,483 @@ def login():
 
 # ---------- PRODUCTS / CART / ORDERS ----------
 
-PRODUCTS = {
-    "Refrigerator": {"price": 500},
-    "Microwave": {"price": 300},
-    "Dishwasher": {"price": 450},
-    "Oven": {"price": 550},
-    "Washer": {"price": 600},
-    "Dryer": {"price": 600},
-    "Blender": {"price": 100},
-    "DripCoffee": {"price": 150},
-    "Laptop": {"price": 200},
-    "TV": {"price": 399},
-    "Speaker": {"price": 199},
-    "OutDatedVinyl": {"price": 50},
-    "Switch2": {"price": 499},
-    "PlayStation5": {"price": 599},
-    "XboxS": {"price": 399},
-    "OutDatedGameBoy": {"price": 59},
-    "Headphones": {"price": 49},
-    "IPad": {"price": 299},
-    "GamingDesktop": {"price": 999},
-    "Printer": {"price": 230},
-    "Monitor": {"price": 750},
-    "Camera": {"price": 700},
-    "SmartWatch": {"price": 299},
-    "Vaccum": {"price": 100},
-}
-
-# still using in-memory carts and an in-memory mirror of orders
-CARTS = {}
-ORDERS = {}
-
-
-def tok():
-    return request.headers.get("X-Demo-Token") or "guest"
-
-
-def subtotal(t):
-    cart = CARTS.get(t, {})
-    return sum(PRODUCTS[p]["price"] * q for p, q in cart.items())
-
-
 @app.get("/api/products")
 def list_products():
-    return jsonify([{"id": k, "price": v["price"]} for k, v in PRODUCTS.items()])
+    """
+    Get all products from database.
+    No authentication required.
+    
+    Returns:
+        200: List of products with id, name, and price
+        500: Server error
+    """
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id, name, price, description, image_url FROM products ORDER BY name")
+        products = cur.fetchall()
+        
+        # Convert Decimal to float for JSON serialization
+        for product in products:
+            product['price'] = float(product['price'])
+        
+        return jsonify(products)
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
 @app.get("/api/cart")
 def get_cart():
-    t = tok()
-    items = [
-        {"productId": p, "qty": q, "price": PRODUCTS[p]["price"]}
-        for p, q in CARTS.get(t, {}).items()
-    ]
-    return jsonify({"items": items, "subtotal": subtotal(t)})
+    """
+    Get current user's cart items.
+    Requires authentication.
+    
+    Returns:
+        200: Cart items with subtotal
+        401: Not authenticated
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        
+        # Get cart items with product details
+        cur.execute(
+            """
+            SELECT 
+                c.id as cart_item_id,
+                c.product_id,
+                c.quantity,
+                p.name as product_name,
+                p.price
+            FROM cart_items c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
+            ORDER BY c.added_at DESC
+            """,
+            (user_id,),
+        )
+        
+        items = cur.fetchall()
+        
+        # Calculate subtotal and format response
+        subtotal = 0
+        formatted_items = []
+        for item in items:
+            price = float(item['price'])
+            qty = item['quantity']
+            subtotal += price * qty
+            
+            formatted_items.append({
+                'id': item['cart_item_id'],
+                'productId': item['product_id'],
+                'productName': item['product_name'],
+                'qty': qty,
+                'price': price
+            })
+        
+        return jsonify({
+            'items': formatted_items,
+            'subtotal': subtotal
+        })
+        
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
 @app.post("/api/cart/items")
 def add_item():
+    """
+    Add item to current user's cart.
+    Requires authentication.
+    
+    Required fields: productId, qty (optional, defaults to 1)
+    
+    Returns:
+        200: Item added successfully
+        400: Invalid product or quantity
+        401: Not authenticated
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
     data = request.get_json(force=True)
-    pid = data.get("productId")
+    product_id = data.get("productId")
     qty = int(data.get("qty", 1))
-    if pid not in PRODUCTS:
-        abort(400, "invalid product")
-    t = tok()
-    CARTS.setdefault(t, {})
-    CARTS[t][pid] = CARTS[t].get(pid, 0) + max(1, qty)
-    return jsonify({"ok": True})
+    
+    if qty < 1:
+        return jsonify({"errors": [{"msg": "Quantity must be at least 1"}]}), 400
+    
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        
+        # Verify product exists
+        cur.execute("SELECT id FROM products WHERE id = %s", (product_id,))
+        if not cur.fetchone():
+            return jsonify({"errors": [{"msg": "Invalid product"}]}), 400
+        
+        # Generate demo_token for the cart_items table constraint
+        demo_token = f"user_{user_id}"
+        
+        # Check if item already in cart
+        cur.execute(
+            """
+            SELECT id, quantity FROM cart_items 
+            WHERE user_id = %s AND product_id = %s
+            """,
+            (user_id, product_id),
+        )
+        
+        existing = cur.fetchone()
+        
+        if existing:
+            # Update quantity
+            new_qty = existing['quantity'] + qty
+            cur.execute(
+                "UPDATE cart_items SET quantity = %s WHERE id = %s",
+                (new_qty, existing['id']),
+            )
+        else:
+            # Insert new item
+            cur.execute(
+                """
+                INSERT INTO cart_items (demo_token, user_id, product_id, quantity)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (demo_token, user_id, product_id, qty),
+            )
+        
+        conn.commit()
+        return jsonify({"ok": True})
+        
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
-@app.patch("/api/cart/items/<pid>")
-def update_item(pid):
+@app.patch("/api/cart/items/<int:cart_item_id>")
+def update_item(cart_item_id):
+    """
+    Update quantity of item in current user's cart.
+    Requires authentication.
+    
+    Required fields: qty
+    
+    Returns:
+        200: Quantity updated
+        400: Invalid quantity
+        401: Not authenticated
+        404: Item not found or doesn't belong to user
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
     data = request.get_json(force=True)
     qty = int(data.get("qty", 1))
-    t = tok()
-    if t not in CARTS or pid not in CARTS[t]:
-        abort(404, "not in cart")
-    CARTS[t][pid] = max(1, qty)
-    return jsonify({"ok": True})
+    
+    if qty < 1:
+        return jsonify({"errors": [{"msg": "Quantity must be at least 1"}]}), 400
+    
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor()
+        
+        # Verify item belongs to user and update
+        cur.execute(
+            """
+            UPDATE cart_items 
+            SET quantity = %s 
+            WHERE id = %s AND user_id = %s
+            """,
+            (qty, cart_item_id, user_id),
+        )
+        
+        if cur.rowcount == 0:
+            return jsonify({"errors": [{"msg": "Item not found in your cart"}]}), 404
+        
+        conn.commit()
+        return jsonify({"ok": True})
+        
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
-@app.delete("/api/cart/items/<pid>")
-def remove_item(pid):
-    t = tok()
-    if t in CARTS and pid in CARTS[t]:
-        del CARTS[t][pid]
-    return jsonify({"ok": True})
+@app.delete("/api/cart/items/<int:cart_item_id>")
+def remove_item(cart_item_id):
+    """
+    Remove item from current user's cart.
+    Requires authentication.
+    
+    Returns:
+        200: Item removed
+        401: Not authenticated
+        404: Item not found or doesn't belong to user
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor()
+        
+        # Verify item belongs to user and delete
+        cur.execute(
+            "DELETE FROM cart_items WHERE id = %s AND user_id = %s",
+            (cart_item_id, user_id),
+        )
+        
+        if cur.rowcount == 0:
+            return jsonify({"errors": [{"msg": "Item not found in your cart"}]}), 404
+        
+        conn.commit()
+        return jsonify({"ok": True})
+        
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
 @app.post("/api/orders")
 def create_order():
-    t = tok()
+    """
+    Create order from current user's cart.
+    Requires authentication.
     
-    # Try to get user_id from JWT token
-    user_id = None
-    auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            user_id = payload['id']
-        except jwt.InvalidTokenError:
-            pass
+    Optional fields: shippingName, shippingEmail, shippingPhone, shippingAddress
     
-    if not CARTS.get(t):
-        abort(400, "cart empty")
-
-    # snapshot the cart so we can clear it safely later
-    cart_items = CARTS[t].copy()
-    order_total = sum(PRODUCTS[p]["price"] * q for p, q in cart_items.items())
-    order_id = uuid.uuid4().hex[:12]
-    created_at = datetime.datetime.utcnow()
-
+    Returns:
+        201: Order created successfully
+        400: Cart is empty
+        401: Not authenticated
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
+    # Read shipping info from request body
+    body = request.get_json(silent=True) or {}
+    shipping_name = body.get("shippingName")
+    shipping_email = body.get("shippingEmail")
+    shipping_phone = body.get("shippingPhone")
+    shipping_address = body.get("shippingAddress")
+    
     try:
         conn = pool.get_connection()
-        cur = conn.cursor()
-
-        # insert order row WITH user_id
+        cur = conn.cursor(dictionary=True)
+        
+        # Get cart items
         cur.execute(
             """
-            INSERT INTO orders (id, demo_token, user_id, total, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            SELECT c.product_id, c.quantity, p.price
+            FROM cart_items c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id = %s
             """,
-            (order_id, t, user_id, order_total, "pending", created_at),
+            (user_id,),
         )
-
-        # insert order_items rows
-        for p, q in cart_items.items():
-            price = PRODUCTS[p]["price"]
-            line_total = price * q
+        
+        cart_items = cur.fetchall()
+        
+        if not cart_items:
+            return jsonify({"errors": [{"msg": "Cart is empty"}]}), 400
+        
+        # Calculate total
+        order_total = sum(float(item['price']) * item['quantity'] for item in cart_items)
+        
+        # Generate order ID and timestamp
+        order_id = uuid.uuid4().hex[:12]
+        created_at = datetime.datetime.utcnow()
+        demo_token = f"user_{user_id}"
+        
+        # Insert order
+        cur.execute(
+            """
+            INSERT INTO orders (
+                id, demo_token, user_id, total, status, created_at,
+                shipping_name, shipping_email, shipping_phone, shipping_address
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                order_id,
+                demo_token,
+                user_id,
+                order_total,
+                "pending",
+                created_at,
+                shipping_name,
+                shipping_email,
+                shipping_phone,
+                shipping_address,
+            ),
+        )
+        
+        # Insert order items
+        for item in cart_items:
+            price = float(item['price'])
+            qty = item['quantity']
+            line_total = price * qty
+            
             cur.execute(
                 """
                 INSERT INTO order_items
-                  (order_id, product_id, quantity, unit_price, line_total)
+                    (order_id, product_id, quantity, unit_price, line_total)
                 VALUES (%s, %s, %s, %s, %s)
                 """,
-                (order_id, p, q, price, line_total),
+                (order_id, item['product_id'], qty, price, line_total),
             )
-
+        
+        # Clear user's cart
+        cur.execute("DELETE FROM cart_items WHERE user_id = %s", (user_id,))
+        
         conn.commit()
+        
+        # Build response
+        order_obj = {
+            "id": order_id,
+            "userId": user_id,
+            "items": [
+                {
+                    "productId": item['product_id'],
+                    "qty": item['quantity'],
+                    "price": float(item['price'])
+                }
+                for item in cart_items
+            ],
+            "total": order_total,
+            "status": "pending",
+            "createdAt": created_at.isoformat(),
+        }
+        
+        return jsonify(order_obj), 201
+        
     except MySQLError as e:
         app.logger.exception(e)
-        return "Server error", 500
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
     finally:
         try:
             cur.close()
             conn.close()
         except Exception:
             pass
-
-    # build response object exactly like before
-    order_obj = {
-        "id": order_id,
-        "user": t,
-        "items": [
-            {"productId": p, "qty": q, "price": PRODUCTS[p]["price"]}
-            for p, q in cart_items.items()
-        ],
-        "total": order_total,
-        "status": "pending",
-        "createdAt": created_at.isoformat(),
-    }
-
-    ORDERS[order_id] = order_obj
-    CARTS[t] = {}
-
-    return jsonify(order_obj)
 
 
 @app.get("/api/orders")
 def list_orders():
-    # Check for JWT token first (for logged-in users)
-    auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            user_id = payload['id']
-            
-            # Get orders from database for this user
-            try:
-                conn = pool.get_connection()
-                cur = conn.cursor(dictionary=True)
-                
-                # Get orders
-                cur.execute("""
-                    SELECT id, total, status, created_at, paid_at
-                    FROM orders
-                    WHERE user_id = %s
-                    ORDER BY created_at DESC
-                """, (user_id,))
-                
-                orders = cur.fetchall()
-                
-                # Get items for each order
-                result = []
-                for order in orders:
-                    cur.execute("""
-                        SELECT product_id, quantity, unit_price
-                        FROM order_items
-                        WHERE order_id = %s
-                    """, (order['id'],))
-                    
-                    items = cur.fetchall()
-                    
-                    result.append({
-                        'id': order['id'],
-                        'total': float(order['total']),
-                        'status': order['status'],
-                        'createdAt': order['created_at'].isoformat() if order['created_at'] else None,
-                        'items': [{
-                            'productId': item['product_id'],
-                            'qty': item['quantity'],
-                            'price': float(item['unit_price'])
-                        } for item in items]
-                    })
-                
-                cur.close()
-                conn.close()
-                
-                return jsonify(result)
-                
-            except MySQLError as e:
-                app.logger.exception(e)
-                return "Server error", 500
-                
-        except jwt.InvalidTokenError:
-            pass
+    """
+    ✅ FIXED: Get current user's order history FROM DATABASE
+    Returns properly formatted data for frontend with subtotal and tax
     
-    # Fallback to demo token behavior (for guest users)
-    t = tok()
-    return jsonify([o for o in ORDERS.values() if o["user"] == t])
-
-
-@app.post("/api/payments/mock")
-def pay():
-    data = request.get_json(force=True)
-    oid = data.get("orderId")
-    outcome = data.get("outcome", "success")
-
-    if oid not in ORDERS:
-        abort(404, "order not found")
-
-    new_status = "paid" if outcome == "success" else "failed"
-    ORDERS[oid]["status"] = new_status
-
-    # also update DB so status persists
+    Returns:
+        200: List of orders with items
+        401: Not authenticated
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
     try:
         conn = pool.get_connection()
-        cur = conn.cursor()
-        if new_status == "paid":
+        cur = conn.cursor(dictionary=True)
+        
+        # Get orders for this user
+        cur.execute(
+            """
+            SELECT id, total, status, created_at, paid_at,
+                   shipping_name, shipping_email, shipping_phone, shipping_address
+            FROM orders
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            """,
+            (user_id,),
+        )
+        
+        orders = cur.fetchall()
+        
+        # Get items for each order
+        result = []
+        for order in orders:
             cur.execute(
-                "UPDATE orders SET status=%s, paid_at=%s WHERE id=%s",
-                (new_status, datetime.datetime.utcnow(), oid),
+                """
+                SELECT oi.product_id, oi.quantity, oi.unit_price, p.name as product_name
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.id
+                WHERE oi.order_id = %s
+                """,
+                (order['id'],),
             )
-        else:
-            cur.execute(
-                "UPDATE orders SET status=%s WHERE id=%s",
-                (new_status, oid),
-            )
-        conn.commit()
+            
+            items = cur.fetchall()
+            
+            # ✅ Calculate subtotal and tax
+            subtotal = sum(float(item['unit_price']) * item['quantity'] for item in items)
+            tax = subtotal * 0.08
+            
+            result.append({
+                'id': order['id'],
+                'total': float(order['total']),
+                'subtotal': round(subtotal, 2),  # ✅ Added
+                'tax': round(tax, 2),            # ✅ Added
+                'status': order['status'],
+                'createdAt': order['created_at'].isoformat() if order['created_at'] else None,
+                'paidAt': order['paid_at'].isoformat() if order['paid_at'] else None,
+                'shippingName': order.get('shipping_name'),
+                'shippingEmail': order.get('shipping_email'),
+                'shippingPhone': order.get('shipping_phone'),
+                'shippingAddress': order.get('shipping_address'),
+                'items': [
+                    {
+                        'productId': item['product_id'],
+                        'productName': item['product_name'],
+                        'name': item['product_name'],          # ✅ Added for compatibility
+                        'quantity': item['quantity'],          # ✅ Added for compatibility
+                        'unitPrice': float(item['unit_price']),  # ✅ Added for compatibility
+                        'qty': item['quantity'],
+                        'price': float(item['unit_price'])
+                    }
+                    for item in items
+                ]
+            })
+        
+        return jsonify(result)
+        
     except MySQLError as e:
         app.logger.exception(e)
-        # still return the in-memory order so front-end behavior stays same
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
     finally:
         try:
             cur.close()
@@ -410,10 +845,96 @@ def pay():
         except Exception:
             pass
 
-    return jsonify(ORDERS[oid])
+
+@app.post("/api/payments/mock")
+def pay():
+    """
+    Mock payment processing for an order.
+    Requires authentication.
+    
+    Required fields: orderId, outcome (success/failure)
+    
+    Returns:
+        200: Payment processed
+        401: Not authenticated
+        404: Order not found or doesn't belong to user
+        500: Server error
+    """
+    user_id = get_user_id_from_token()
+    
+    data = request.get_json(force=True)
+    order_id = data.get("orderId")
+    outcome = data.get("outcome", "success")
+    
+    new_status = "paid" if outcome == "success" else "failed"
+    
+    try:
+        conn = pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        
+        # Verify order belongs to user
+        cur.execute(
+            "SELECT id, total, status FROM orders WHERE id = %s AND user_id = %s",
+            (order_id, user_id),
+        )
+        
+        order = cur.fetchone()
+        if not order:
+            return jsonify({"errors": [{"msg": "Order not found"}]}), 404
+        
+        # Update order status
+        if new_status == "paid":
+            cur.execute(
+                "UPDATE orders SET status = %s, paid_at = %s WHERE id = %s",
+                (new_status, datetime.datetime.utcnow(), order_id),
+            )
+        else:
+            cur.execute(
+                "UPDATE orders SET status = %s WHERE id = %s",
+                (new_status, order_id),
+            )
+        
+        conn.commit()
+        
+        # Get updated order with items
+        cur.execute(
+            """
+            SELECT oi.product_id, oi.quantity, oi.unit_price
+            FROM order_items oi
+            WHERE oi.order_id = %s
+            """,
+            (order_id,),
+        )
+        
+        items = cur.fetchall()
+        
+        return jsonify({
+            "id": order_id,
+            "status": new_status,
+            "total": float(order['total']),
+            "items": [
+                {
+                    "productId": item['product_id'],
+                    "qty": item['quantity'],
+                    "price": float(item['unit_price'])
+                }
+                for item in items
+            ]
+        })
+        
+    except MySQLError as e:
+        app.logger.exception(e)
+        return jsonify({"errors": [{"msg": "Server error"}]}), 500
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
 
 
 # ---------- REGISTER PAYMENT ROUTES ----------
+
 register_payment_routes(app, pool, JWT_SECRET, PAYMENT_ENCRYPTION_KEY)
 
 

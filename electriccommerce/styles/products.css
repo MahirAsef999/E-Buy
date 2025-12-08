@@ -9,9 +9,9 @@
 /* Product thumbnails with hover title bar */
 .product-card {
   position: relative;
-  /* border: 1px solid #9ad69a; */
+  border: 1px solid #9ad69a;
   padding: 2px;
-  /* background: #e4ffe4; */
+  background: #e4ffe4;
   cursor: pointer;
   overflow: hidden;
 }

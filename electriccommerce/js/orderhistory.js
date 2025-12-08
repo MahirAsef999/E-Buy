@@ -1,12 +1,12 @@
-// Shows past orders with filters: Last 30 days / Last 6 months / This year / All
-
 let allOrders = [];
 let currentFilter = "30"; // default = last 30 days
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // If you have auth checking like other pages, use it
-    if (typeof checkAuth === "function") {
-        if (!checkAuth()) return;
+    // ✅ REQUIRE AUTHENTICATION
+    try {
+        await requireAuth();
+    } catch (error) {
+        return;
     }
 
     setupFilterButtons();
@@ -16,30 +16,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Filter buttons
 function setupFilterButtons() {
-    // In HTML: buttons with class="filter-btn" and data-range="30"|"180"|"year"|"all"
     const buttons = document.querySelectorAll(".filter-btn");
 
     buttons.forEach((btn) => {
         btn.addEventListener("click", () => {
-            // toggle active styling
             buttons.forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
 
-            currentFilter = btn.dataset.range; // "30", "180", "year", "all"
+            currentFilter = btn.dataset.range;
             applyFilterAndRender();
         });
     });
 }
-
 
 // Load orders from backend
 async function loadOrders() {
     const listEl = document.getElementById("orders-list");
 
     try {
-        // Uses api() helper from api.js
-        // Expected endpoint: GET /api/orders
-        const data = await api("/orders");
+        // ✅ Use authedApi() instead of api()
+        const data = await authedApi("/orders");
 
         // Sort newest → oldest
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -69,7 +65,6 @@ function applyFilterAndRender() {
         const yearStart = new Date(now.getFullYear(), 0, 1);
         filtered = filtered.filter(o => new Date(o.createdAt) >= yearStart);
     }
-    // "all" = no extra filtering
 
     renderOrders(filtered);
 }
@@ -102,13 +97,12 @@ function orderToHtml(order) {
 
     const items = order.items || [];
 
+    // ✅ FIX: Use subtotal and tax from backend, then calculate correct total
     const subtotal = Number(order.subtotal || 0);
     const tax = Number(order.tax || 0);
-    const total = Number(
-        order.total !== undefined && order.total !== null
-            ? order.total
-            : subtotal + tax
-    );
+    
+    // ✅ FIXED: Total should be subtotal + tax
+    const total = subtotal + tax;
 
     const itemsHtml = items.map(itemToHtml).join("");
 
@@ -147,26 +141,26 @@ function orderToHtml(order) {
 }
 
 function itemToHtml(item) {
-    // Try different fields the backend might send
-    const name =
-        item.name ||
-        item.productName ||
-        item.title ||
-        "Item";
+    const name = item.name || item.productName || item.title || "Item";
 
-    // Map item name → productImages key
-    // You can also send item.imageKey from backend if you want it exact
-    let imageKey = item.imageKey;
-
+    // ✅ FIXED: Better image key matching
+    let imageKey = item.imageKey || item.productId;
+    
+    // Try to match product name to image key
     if (!imageKey && name) {
-        // Remove spaces to match your keys like "DripCoffee"
         imageKey = name.replace(/\s+/g, "");
     }
 
-    const imgSrc =
-        (imageKey && productImages[imageKey]) ||
-        productImages[name] ||
-        "../images/placeholder.png";
+    // ✅ FIXED: Try multiple fallback strategies for images
+    let imgSrc = "https://via.placeholder.com/100?text=Item"; // default fallback
+    
+    if (imageKey && productImages[imageKey]) {
+        imgSrc = productImages[imageKey];
+    } else if (productImages[name]) {
+        imgSrc = productImages[name];
+    } else if (item.productId && productImages[item.productId]) {
+        imgSrc = productImages[item.productId];
+    }
 
     const unitPrice = Number(
         item.unitPrice !== undefined
