@@ -67,7 +67,7 @@ def get_user_from_token(jwt_secret):
 def register_payment_routes(app, pool, jwt_secret, encryption_key):
     """
     Register all payment-related routes to the Flask app.
-    ✅ ALL DATA FROM MYSQL DATABASE - NO LOCALSTORAGE
+    ALL DATA FROM MYSQL DATABASE - NO LOCALSTORAGE
     
     Args:
         app: Flask application instance

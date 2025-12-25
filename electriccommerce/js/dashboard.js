@@ -4,7 +4,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ Load user info from database
+  // Load user info from database
   try {
     const token = localStorage.getItem("token");
     if (token) {
@@ -50,6 +50,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     paymentBox.addEventListener("click", () => {
       window.location.href = "paymentsystem.html";
     });
+  }
+
+ // Customer Service
+const customerServiceBox = document.getElementById("customer-service");
+if (customerServiceBox) {
+    customerServiceBox.addEventListener("click", () => {
+        window.location.href = "customer-service.html";
+    });
+}
+
+
+ // Admin
+const admin = document.getElementById("adminbox123");
+if (admin) {
+ admin.addEventListener("click", () => {
+  window.location.href = "admin.html";
+   });
   }
 
   // "Your Account" title to go back to main page

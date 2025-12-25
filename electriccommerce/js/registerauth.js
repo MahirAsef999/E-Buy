@@ -30,18 +30,6 @@ function clearErrors() {
   document.getElementById("regPassword2").classList.remove("error");
 }
 
-function showFieldError(fieldId, errorId, message) {
-  const errorElement = document.getElementById(errorId);
-  const fieldElement = document.getElementById(fieldId);
-  
-  if (errorElement) {
-    errorElement.textContent = message;
-  }
-  
-  if (fieldElement) {
-    fieldElement.classList.add("error");
-  }
-}
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -239,5 +227,4 @@ window.addEventListener('DOMContentLoaded', async () => {
       localStorage.removeItem('token');
     }
   }
-
 });
