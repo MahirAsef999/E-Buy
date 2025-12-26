@@ -82,7 +82,7 @@ body {
   align-items: center;
 }
 
-/* --- layout --- */
+/*layout*/
 .container {
   max-width: 1320px;          /* match topbar */
   margin: 18px auto;
@@ -176,7 +176,7 @@ body {
 
 .muted { color: var(--muted); }
 
-/* --- buttons --- */
+/*buttons*/
 .btn {
   height: 36px;
   padding: 0 12px;
@@ -206,7 +206,7 @@ body {
   color: #111827;
 }
 
-/* --- items --- */
+/*items*/
 .items {
   display: flex;
   flex-direction: column;

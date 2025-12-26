@@ -1,13 +1,4 @@
--- Setup SQL for eBuy Application
-CREATE DATABASE IF NOT EXISTS ebuy_app
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE ebuy_app;
-
-CREATE USER IF NOT EXISTS 'ebuy_user'@'localhost' IDENTIFIED BY 'Software5432';
-GRANT ALL PRIVILEGES ON ebuy_app.* TO 'ebuy_user'@'localhost';
-FLUSH PRIVILEGES;
+USE railway;
 
 -- USERS TABLE
 CREATE TABLE IF NOT EXISTS users (
@@ -24,9 +15,6 @@ CREATE TABLE IF NOT EXISTS users (
   shipping_country VARCHAR(120) NULL,   
   shipping_zip    VARCHAR(20)  NULL,
   shipping_phone  VARCHAR(50)  NULL,
-
-  -- ADMIN FLAG 
-  is_admin TINYINT(1) NOT NULL DEFAULT 0,
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -94,7 +82,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ORDERS TABLE (delivery tracking)
+-- ORDERS TABLE (with delivery tracking)
 CREATE TABLE IF NOT EXISTS orders (
   id CHAR(12) NOT NULL PRIMARY KEY,
   demo_token VARCHAR(64) NOT NULL,
@@ -156,12 +144,3 @@ CREATE TABLE IF NOT EXISTS payment_methods (
 
 CREATE INDEX idx_payment_methods_user
   ON payment_methods (user_id, is_default DESC, created_at DESC);
-
--- ADMIN USERS
-CREATE INDEX idx_users_is_admin
-  ON users (is_admin);
-
--- USER ADMIN UPDATE
-UPDATE users
-SET is_admin = 1
-WHERE email = 'masef1@fordham.edu';

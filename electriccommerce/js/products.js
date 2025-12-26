@@ -1,13 +1,6 @@
-/**
- * products.js - FIXED VERSION
- * Checks authentication before adding to cart
- * Uses authedApi() for POST /cart/items
- */
-
-// State for product detail modal
 let currentProductId = null;
 
-// Set up click handlers for each product-card
+// Product card
 function setupProductCards() {
   const cards = document.querySelectorAll(".product-card");
   cards.forEach(card => {
@@ -20,7 +13,7 @@ function setupProductCards() {
     });
   });
 }
-
+// Open product card
 function openProductModal(product) {
   currentProductId = product.id;
 
@@ -46,6 +39,7 @@ function closeProductModal() {
   if (modal) modal.style.display = "none";
 }
 
+// Add product to cart
 async function addCurrentProductToCart() {
   const qtyEl = document.getElementById("productQty");
   const qty = parseInt(qtyEl?.value || "1", 10) || 1;
@@ -54,10 +48,9 @@ async function addCurrentProductToCart() {
   closeProductModal();
 }
 
-// ✅ FIXED: Add item to cart with authentication check
+// Add item to cart from product
 async function myItem(itemName, qty = 1) {
   try {
-    // ✅ FIX 1: Check if user is logged in
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Please log in to add items to your cart.");
@@ -65,7 +58,6 @@ async function myItem(itemName, qty = 1) {
       return;
     }
 
-    // ✅ FIX 2: Use authedApi instead of api
     await authedApi("/cart/items", {
       method: "POST",
       body: JSON.stringify({ productId: itemName, qty: qty })
@@ -73,7 +65,7 @@ async function myItem(itemName, qty = 1) {
     
     alert(itemName + " added to cart");
     
-    // Update cart badge
+    // Update cart
     if (typeof updateCartBadge === 'function') {
       await updateCartBadge();
     }
@@ -96,7 +88,7 @@ window.addEventListener("click", function(event) {
   }
 });
 
-// ✅ INITIALIZE PRODUCT CARDS WHEN PAGE LOADS
 document.addEventListener("DOMContentLoaded", () => {
   setupProductCards();
+
 });

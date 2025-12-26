@@ -1,10 +1,3 @@
-/**
- * registerauth.js - User registration handler
- * ✅ PRODUCTION-READY with proper error handling
- * ✅ Prevents duplicate email registration
- * ✅ All data stored in database immediately upon registration
- */
-
 async function postJSON(path, body) {
   return api(path, {
     method: "POST",
@@ -12,6 +5,7 @@ async function postJSON(path, body) {
   });
 }
 
+// If there are errors, clear them
 function clearErrors() {
   document.getElementById("firstNameError").textContent = "";
   document.getElementById("lastNameError").textContent = "";
@@ -30,11 +24,26 @@ function clearErrors() {
   document.getElementById("regPassword2").classList.remove("error");
 }
 
+// Show error message for specific fields
+function showFieldError(fieldId, errorId, message) {
+  const errorElement = document.getElementById(errorId);
+  const fieldElement = document.getElementById(fieldId);
+  
+  if (errorElement) {
+    errorElement.textContent = message;
+  }
+  
+  if (fieldElement) {
+    fieldElement.classList.add("error");
+  }
+}
 
+// Email format 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Form submission
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   clearErrors();
@@ -48,7 +57,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
   const msg = document.getElementById("regMsg");
   let hasError = false;
 
-  // ✅ CLIENT-SIDE VALIDATION
+  // First Name
   if (!firstName) {
     showFieldError("regFirstName", "firstNameError", "First name is required");
     hasError = true;
@@ -57,6 +66,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     hasError = true;
   }
 
+  // Last Name
   if (!lastName) {
     showFieldError("regLastName", "lastNameError", "Last name is required");
     hasError = true;
@@ -65,6 +75,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     hasError = true;
   }
 
+  // Email
   if (!email) {
     showFieldError("regEmail", "emailError", "Email is required");
     hasError = true;
@@ -73,6 +84,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     hasError = true;
   }
 
+  // Password
   if (!password) {
     showFieldError("regPassword", "passwordError", "Password is required");
     hasError = true;
@@ -81,6 +93,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     hasError = true;
   }
 
+  // Confirm Password
   if (!password2) {
     showFieldError("regPassword2", "password2Error", "Please confirm your password");
     hasError = true;
@@ -91,15 +104,14 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
   if (hasError) return;
 
-  // ✅ Disable button to prevent double submission
+  // Prevent multiple submissions
   const submitBtn = document.getElementById("registerBtn");
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
   submitBtn.textContent = "Creating account...";
 
   try {
-    // ✅ REGISTER REQUEST - creates account in database
-    // Database will reject if email already exists (UNIQUE constraint)
+    // If email alredy exists, it will show error
     await postJSON("/auth/register", {
       first_name: firstName,
       last_name: lastName,
@@ -110,58 +122,54 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     
     msg.className = "success";
     msg.style.display = "block";
-    msg.textContent = "✓ Account created successfully! Redirecting to login...";
-    console.log("✓ New account created for:", email);
+    msg.textContent = "Success: Account created successfully! Redirecting to login...";
+    console.log("Success: New account created for:", email);
     
-    // ✅ Clear form
     document.getElementById("registerForm").reset();
     
-    // ✅ Redirect to login page
     setTimeout(() => {
       window.location.href = "loginauth.html";
     }, 2000);
     
   } catch (e) {
-    // ✅ Re-enable button
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
     
     msg.className = "error";
     msg.style.display = "block";
     
-    // ✅ HANDLE DUPLICATE EMAIL ERROR
     const errorMessage = e.message.toLowerCase();
     
+    // error messages
     if (errorMessage.includes("email already registered") || 
         errorMessage.includes("409") || 
         errorMessage.includes("duplicate") ||
         errorMessage.includes("already exists")) {
       showFieldError("regEmail", "emailError", "This email is already registered");
-      msg.textContent = "✗ This email is already registered. Please use a different email or sign in instead.";
+      msg.textContent = "Error: This email is already registered. Please use a different email or sign in instead.";
       
-      // ✅ Provide link to login
       msg.innerHTML = `
-        ✗ This email is already registered. 
+        Error: This email is already registered. 
         <a href="loginauth.html" style="color: #007bff; text-decoration: underline;">
           Click here to sign in instead
         </a>
       `;
     }
     else if (errorMessage.includes("network")) {
-      msg.textContent = "✗ Unable to connect to server. Please check your internet connection.";
+      msg.textContent = "Error: Unable to connect to server. Please check your internet connection.";
     }
     else if (errorMessage.includes("server error")) {
-      msg.textContent = "✗ Server error. Please try again in a few moments.";
+      msg.textContent = "Error: Server error. Please try again in a few moments.";
     }
     else {
-      msg.textContent = "✗ " + (e.message || "Registration failed. Please try again.");
+      msg.textContent = "Error: " + (e.message || "Registration failed. Please try again.");
     }
     
     console.error("Registration failed:", e);
   }
 });
 
-// ✅ REAL-TIME VALIDATION
+// First Name clear error message
 document.getElementById("regFirstName").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("firstNameError").textContent = "";
@@ -169,6 +177,7 @@ document.getElementById("regFirstName").addEventListener("input", function () {
   }
 });
 
+// Last Name clear error message
 document.getElementById("regLastName").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("lastNameError").textContent = "";
@@ -176,6 +185,7 @@ document.getElementById("regLastName").addEventListener("input", function () {
   }
 });
 
+// Email clear error message
 document.getElementById("regEmail").addEventListener("input", function() {
   if (this.value) {
     document.getElementById("emailError").textContent = "";
@@ -187,6 +197,7 @@ document.getElementById("regEmail").addEventListener("input", function() {
   }
 });
 
+// Password clear error message
 document.getElementById("regPassword").addEventListener("input", function() {
   if (this.value) {
     document.getElementById("passwordError").textContent = "";
@@ -194,6 +205,7 @@ document.getElementById("regPassword").addEventListener("input", function() {
   }
 });
 
+// Confirm Password clear error message and check match
 document.getElementById("regPassword2").addEventListener("input", function() {
   const password = document.getElementById("regPassword").value;
   
@@ -202,29 +214,27 @@ document.getElementById("regPassword2").addEventListener("input", function() {
     this.classList.remove("error");
   }
   
-  // ✅ Show mismatch error as user types
   if (this.value && this.value.length >= password.length && this.value !== password) {
     showFieldError("regPassword2", "password2Error", "Passwords do not match");
   }
 });
 
+// Clear button
 document.getElementById("regClear").addEventListener("click", () => {
   document.getElementById("registerForm").reset();
   clearErrors();
 });
 
-// ✅ REDIRECT IF ALREADY LOGGED IN
 window.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      // ✅ Check if user already has valid session
       await authedApi('/account/me');
       console.log('✓ Already logged in, redirecting to main page');
-      window.location.href = "main.html";
+      window.location.href = "index.html";
     } catch (error) {
-      // Token invalid, stay on register page
       localStorage.removeItem('token');
     }
   }
+
 });

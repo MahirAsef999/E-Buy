@@ -6,12 +6,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles/main.css" type="text/css"/>
-    <link rel="stylesheet" href="../styles/main.css" type="text/css"/>
-    <link rel="stylesheet" href="../styles/dashboard.css" type="text/css"/>
+    
+    <!--Css Files-->
+    <link rel="stylesheet" href="styles/main.css" type="text/css"/>
+    <link rel="stylesheet" href="styles/cart.css" type="text/css"/>
+    <link rel="stylesheet" href="styles/dashboard.css" type="text/css"/>
 </head>
 <body>
-    <!-- ================= CART MODAL ================= -->
+    <!--CART MODAL-->
     <div id="cartModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeCart()">&times;</span>
@@ -46,10 +48,9 @@
             </div>
         </div>
     </div>
-
-    <!-- ================= HEADER (SAME AS MAIN.HTML) ================= -->
+    <!--NAVIGATION BAR-->
     <div id="header">
-        <div id="website-name" onclick="window.location.href='main.html'" style="cursor: pointer;">E-Buy</div>
+        <div id="website-name" onclick="window.location.href='index.html'" style="cursor: pointer;">E-Buy</div>
 
         <form id="search-box">
             <input type="text" id="search-input" placeholder="Search for product"/>
@@ -59,7 +60,7 @@
                 </svg>
             </button>
         </form>
-
+        <!--Account Box-->
         <div id="account-box">
             <a id="account-link" href="dashboard.html">
                 <div id="account-greeting">Welcome Guest!</div>
@@ -72,6 +73,7 @@
             </a>
         </div>
 
+        <!--Shopping Cart Button-->
         <button id="cartButton" onclick="openCart()">
             <img src="https://png.pngtree.com/png-clipart/20190920/original/pngtree-shopping-cart-convenient-icon-png-image_4637407.jpg" alt="Shopping Cart"/>
             <div id="cartBadge">0</div>
@@ -87,47 +89,55 @@
         </div>
     </div>
 
-    <!-- ================= MAIN CONTENT ================= -->
+    <!--Dashboard Content/Buttons-->
     <div id="main-container">
         <div id="account-container">
             <div id="account-title">Your Account</div>
             <div id="account-options-container">
                 <div id="first-option-row" class="option-row">
                     <div id="login-security" class="account-option">
+                        <!--Login & Security-->
                         <div class="option-title">Login & Security</div>
                         <div class="option-description">Edit login details, name, e-mail, etc.</div>
                     </div>
+                    <!--Order History-->
                     <div id="order-history" class="account-option">
                         <div class="option-title">Order History</div>
                         <div class="option-description">View past orders and invoices</div>
                     </div>
+                    <!--Address-->
                     <div id="address" class="account-option">
                         <div class="option-title">Address</div>
                         <div class="option-description">View and edit your delivery address</div>
                     </div>
                 </div>
                 <div id="second-option-row" class="option-row">
+                    <!--Payment Options-->
                     <div id="payment" class="account-option">
                         <div class="option-title">Payment Options</div>
                         <div class="option-description">View, add, and edit credit/debit cards and other payment settings</div>
                     </div>
+                    <!--Customer Service-->
                     <div id="customer-service" class="account-option">
                         <div class="option-title">Customer Service</div>
                         <div class="option-description">Find FAQs and necessary contact information of developers</div>
                     </div>
-
+                    <!--Admin-->
                     <div id="adminbox123" class="account-option">
                         <div class="option-title">Admin</div>
-                        <div class="option-description">Check the stats and logs of users on the site</div>
+                        <div class="option-description">Get a holistic view of business performace.</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/cart.js"></script>
-    <script src="../js/main.js"></script>
-    <script src="../js/dashboard.js"></script>
+    <!--Js Files-->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
+
 </html>
+

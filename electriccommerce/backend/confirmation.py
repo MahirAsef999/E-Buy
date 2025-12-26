@@ -1,11 +1,3 @@
-"""
-confirmation.py - Email confirmation service using Sendgrid
-
-Handles:
-- Order confirmation emails with delivery tracking
-- Delivery status updates
-"""
-
 import os
 from datetime import datetime, timedelta
 import random
@@ -15,7 +7,7 @@ from sendgrid.helpers.mail import Mail
 
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
 
-
+# calculate estimate delivery date (4 business days from order date)
 def calculate_delivery_date(order_date=None):
     if not order_date:
         order_date = datetime.now()
@@ -27,42 +19,18 @@ def calculate_delivery_date(order_date=None):
     
     return delivery_date.date()
 
-
+# generate a random tracking number (USPS format) which is 22 digits when someone makes an order
 def generate_tracking_number():
-    """
-    Generate a mock USPS-style tracking number
-    Format: 9274899992136XXXXXXXXX (22 digits)
-    
-    Returns:
-        str: Tracking number
-    """
     prefix = "92748999"
     suffix = str(random.randint(10000000000000, 99999999999999))
     return prefix + suffix
 
-
+# show amount as USD currency
 def format_currency(amount):
-    """Format amount as USD currency"""
     return f"${float(amount):.2f}"
 
-
+# send order confirmation email showing the order ID, items, total amount of money, shipping address, shipping name, estimated delivery date, and tracking number
 def send_order_confirmation(order_data, user_email):
-    """    
-    Args:
-        order_data:
-            - id: order ID
-            - total: total amount
-            - items: list of {'productName', 'qty', 'price'}
-            - shipping_name: recipient name
-            - shipping_address: full address
-            - estimated_delivery_date: date object
-            - tracking_number: tracking string
-        user_email: Recipient email address
-        
-    Returns:
-        Sendgrid response dict or None if failed
-    """
-    
     items_html = ""
     subtotal = 0
     
@@ -78,11 +46,11 @@ def send_order_confirmation(order_data, user_email):
         </tr>
         """
     
-    # Calculate tax (8%)
-    tax = subtotal * 0.08
-    total = order_data['total']
+    # calculate tax (8%)
+    tax = round(subtotal * 0.08, 2)
+    total = round(subtotal + tax, 2)
     
-    # Format dates
+    # format dates
     delivery_date_str = order_data['estimated_delivery_date'].strftime('%B %d, %Y')
     order_date_str = datetime.now().strftime('%B %d, %Y')
     
@@ -182,6 +150,7 @@ def send_order_confirmation(order_data, user_email):
                 
                 <!-- Track Order Button -->
                 <div style="text-align: center; margin-top: 40px;">
+                    <a href="#" 
                        style="display: inline-block; padding: 16px 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: transform 0.2s;">
                         Track Your Order →
                     </a>
@@ -231,21 +200,8 @@ def send_order_confirmation(order_data, user_email):
         print(f"Failed to send email: {e}")
         return None
 
-
+# send delivery status update email showing order ID, status (shipped, out for delivery, delivered), and tracking URL if applicable
 def send_delivery_update(order_id, user_email, status, tracking_url=None):
-    """
-    Send delivery status update email
-    
-    Args:
-        order_id: Order ID
-        user_email: Recipient email
-        status: 'shipped', 'out_for_delivery', or 'delivered'
-        tracking_url: Optional tracking URL
-        
-    Returns:
-        Sendgrid response or None
-    """
-    
     status_info = {
         'shipped': {
             'emoji': '📦',
@@ -296,6 +252,8 @@ def send_delivery_update(order_id, user_email, status, tracking_url=None):
     </body>
     </html>
     """
+
+    # sending the email to user email
     message = Mail(
         from_email='orders@kellenfung.com', 
         to_emails=user_email,
@@ -311,4 +269,3 @@ def send_delivery_update(order_id, user_email, status, tracking_url=None):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return None
-

@@ -1,11 +1,5 @@
-/**
- * login-edit.js - FIXED VERSION
- * User login credentials editor
- * Requires authentication
- */
-
 document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ REQUIRE AUTHENTICATION
+  // user must be logged in/authenticated to edit login info
   try {
     await requireAuth();
   } catch (error) {
@@ -23,16 +17,14 @@ async function loadAccountInfo() {
     
     console.log("Loaded account data for login-edit:", data); // Debug log
 
-    // ✅ Load all fields from database
+    // Load all fields from database (First name, Last name, Email, Phone)
     document.getElementById("first-name-input").value = data.first_name || "";
     document.getElementById("last-name-input").value = data.last_name || "";
     document.getElementById("email-input").value = data.email || "";
     
-    // ✅ FIXED: Use 'phone' field (simple phone) instead of shipping_phone
-    // If phone doesn't exist, fall back to shipping_phone
     document.getElementById("phone-input").value = data.phone || data.shipping_phone || "";
     
-    // Password field always starts empty for security
+    // Password field is empty for security
     document.getElementById("password-input").value = "";
     
     console.log("✓ Account info loaded successfully");
@@ -46,6 +38,7 @@ function showSaved(fieldLabel) {
   alert(fieldLabel + " updated successfully.");
 }
 
+// Save button
 function setupSaveButtons() {
   const buttons = document.querySelectorAll(".save-changes");
   const firstNameBtn = buttons[0];
@@ -132,7 +125,7 @@ function setupSaveButtons() {
     }
   });
 
-  // ✅ Phone - FIXED to use 'phone' field
+  // Phone Number
   phoneBtn.addEventListener("click", async () => {
     const value = document.getElementById("phone-input").value.trim();
     if (!value) {
@@ -140,10 +133,9 @@ function setupSaveButtons() {
       return;
     }
     try {
-      // ✅ FIXED: Send as 'phone' instead of 'shipping_phone'
       const response = await authedApi("/account/me", {
         method: "PUT",
-        body: JSON.stringify({ phone: value }),
+        body: JSON.stringify({ shipping_phone: value }),
       });
       console.log("Phone update response:", response);
       showSaved("Phone number");
@@ -178,4 +170,5 @@ function setupSaveButtons() {
       alert("Failed to update password: " + err.message);
     }
   });
+
 }

@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <title>Order History</title>
+    <!--Css Files-->
     <link rel="stylesheet" href="../styles/orderhistory.css" type="text/css"/>
 </head>
 <body>
     <div id="main-container">
         <div id="submain-container">
+            <!--Breadcrumb Navigation-->
             <div id="path-row">
                 <a href="./main.html">E-Buy</a>
                 <span>&gt;</span>
@@ -19,7 +21,7 @@
             <div id="title-row">
                 Order History
             </div>
-
+            <!--Time Range (30 days, 6 months, this year, all time)-->
             <div id="filter-bar">
                 <span id="show-label">Show:</span>
                 <button class="filter-btn active" data-range="30">Last 30 days</button>
@@ -29,16 +31,17 @@
             </div>
 
             <div id="orders-list">
-                <!-- Orders will be inserted here dynamically -->
+                <!--Order history will be shown here from the database-->
             </div>
 
+            <!--If users have no orders placed, it will show this message-->
             <div id="no-orders" class="hidden">
                 You have not placed any orders yet.
             </div>
         </div>
     </div>
 
-    <!-- ✅ CRITICAL: Load api.js FIRST, then orderhistory.js -->
+    <!--Js Files-->
     <script src="../js/api.js"></script>
     <script src="../js/orderhistory.js"></script>
 </body>

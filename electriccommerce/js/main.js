@@ -1,8 +1,3 @@
-/**
- * main.js - Main application logic and navigation
- * Handles navbar, authentication state, logout, and search
- */
-
 document.addEventListener("DOMContentLoaded", async () => {
   const accountGreeting = document.getElementById("account-greeting");
   const accountLabel = document.getElementById("account-label");
@@ -26,26 +21,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       isLoggedIn = false;
     }
   }
-
-  // Update UI based on authentication state
+  // User is logged
   if (isLoggedIn && user) {
-    // LOGGED IN STATE
     const firstName = user.first_name || "User";
-
-    // Update navbar greeting
+    // Welcome message
     if (accountGreeting) {
       accountGreeting.textContent = `Welcome, ${firstName}!`;
     }
+    // Account label
     if (accountLabel) {
       accountLabel.textContent = "Account";
     }
+    // Direct to dashboard (Dashboard)
     if (accountLink) {
       accountLink.href = "dashboard.html";
       accountLink.onclick = null;
     }
+    // Logout 
     if (authText) {
       authText.textContent = "Logout";
     }
+
     if (authLink) {
       authLink.href = "#";
       authLink.onclick = (e) => {
@@ -53,12 +49,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (confirm("Are you sure you want to log out?")) {
           localStorage.removeItem("token");
           alert("You have been logged out successfully.");
-          window.location.href = "main.html";
+          window.location.href = "index.html";
         }
       };
     }
-
-    // ✅ UPDATE BIG WELCOME TEXT ON HOMEPAGE
+    // Welcome message 
     const bigWelcomeText = document.querySelector('h2[style*="padding-left:20px"]');
     if (bigWelcomeText && bigWelcomeText.textContent.includes("By Mahir")) {
       bigWelcomeText.textContent = `Welcome, ${firstName}!`;
@@ -68,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
   } else {
-    // LOGGED OUT / GUEST STATE
+    // If usrer is not logged in 
     if (accountGreeting) {
       accountGreeting.textContent = "Welcome Guest!";
     }
@@ -88,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // PRODUCT SEARCH
+  // Search Products
   const searchForm = document.getElementById("search-box");
   const searchInput = document.getElementById("search-input");
 
@@ -121,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Slider
    document.querySelectorAll(".slider-container").forEach(container =>{
     const slider = container.querySelector(".slider")
     const card = container.querySelector(".card")
@@ -138,4 +134,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     })
   })
   
+
 });

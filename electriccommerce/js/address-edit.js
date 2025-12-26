@@ -1,33 +1,36 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ REQUIRE AUTHENTICATION
+  // User must be logged in/authenticated to edit address
   try {
     await requireAuth();
   } catch (error) {
     return;
   }
 
-  // ✅ Load existing address FROM DATABASE
+  // Load existing address from database
   try {
     const account = await authedApi("/account/me");
     console.log("Loaded account data:", account);
 
     // Load all address fields
+
+    // Street
     if (account.shipping_street) {
       document.getElementById("street-input").value = account.shipping_street;
     }
+    // City
     if (account.shipping_city) {
       document.getElementById("city-input").value = account.shipping_city;
     }
-    
-    // ✅ Load state/province (try both fields for backward compatibility)
+    // State/Province
     const stateValue = account.shipping_state || "";
     if (stateValue) {
       document.getElementById("state-input").value = stateValue;
     }
-    
+    // Country
     if (account.shipping_country) {
       document.getElementById("country-input").value = account.shipping_country;
     }
+    // ZIP/Postal Code
     if (account.shipping_zip) {
       document.getElementById("zip-input").value = account.shipping_zip;
     }
@@ -46,13 +49,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+// Save address
 async function saveAddress() {
   const stateValue = document.getElementById("state-input").value.trim();
   
   const payload = {
     shipping_street: document.getElementById("street-input").value.trim(),
     shipping_city: document.getElementById("city-input").value.trim(),
-    shipping_state: stateValue,     // ✅ Also save to state for backward compatibility
+    shipping_state: stateValue,    
     shipping_country: document.getElementById("country-input").value.trim(),
     shipping_zip: document.getElementById("zip-input").value.trim(),
   };
@@ -71,4 +75,5 @@ async function saveAddress() {
     console.error("Failed to save address:", err);
     alert("Could not save address: " + err.message);
   }
+
 }

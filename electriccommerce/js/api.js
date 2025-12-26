@@ -1,13 +1,12 @@
 
-
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://ecommerce-website-group-project-production.up.railway.app/api";
 
 // Default headers for all requests
 const headers = {
   "Content-Type": "application/json",
 };
 
-
+// API call
 async function api(path, opts = {}) {
   const url = API_BASE + path;
   const config = {
@@ -21,20 +20,20 @@ async function api(path, opts = {}) {
   try {
     const res = await fetch(url, config);
 
-    // ✅ Handle 401 Unauthorized - token is invalid or expired
      if (res.status === 401) {
       const currentPage = window.location.pathname;
       
-      // If on login/register page, it's wrong credentials (not expired session)
+      // If there are login/registration errors, show them
       if (currentPage.includes('loginauth.html') || currentPage.includes('registerauth.html')) {
         const data = await res.json();
         const message = data.errors?.[0]?.msg || "Invalid credentials";
         throw new Error(message);
       }
-      
-      // Otherwise, it's an expired/invalid session
+
+      // Otherwise, it's an expired/invalid session and log out user
       localStorage.removeItem("token");
       
+      // Redirect to login page if not already there
       if (!currentPage.includes('main.html') && !currentPage.includes('products.html')) {
         showError("Your session has expired. Please log in again.");
         setTimeout(() => {
@@ -44,39 +43,40 @@ async function api(path, opts = {}) {
       
       throw new Error("Session expired - please log in again");
     }
-    // ✅ Handle 403 Forbidden
+
+    // Handle if user does not have access to this
     if (res.status === 403) {
       showError("You don't have permission to access this resource.");
       throw new Error("Access forbidden");
     }
 
-    // ✅ Handle 404 Not Found
+    // Handle not found resources
     if (res.status === 404) {
       const text = await res.text();
       throw new Error(text || "Resource not found");
     }
 
-    // ✅ Handle 409 Conflict (duplicate email, etc.)
+    // Handle duplicate emails
     if (res.status === 409) {
       const data = await res.json();
       const message = data.errors?.[0]?.msg || "This email is already registered";
       throw new Error(message);
     }
 
-    // ✅ Handle 400 Bad Request (validation errors)
+    // Invalid Request
     if (res.status === 400) {
       const data = await res.json();
       const message = data.errors?.[0]?.msg || "Invalid request";
       throw new Error(message);
     }
 
-    // ✅ Handle 500 Server Error
+    // Server Error
     if (res.status === 500) {
       showError("Server error. Please try again later.");
       throw new Error("Server error");
     }
 
-    // ✅ Handle other non-OK responses
+    // Other bad responses
     if (!res.ok) {
       const text = await res.text();
       throw new Error(text || `HTTP ${res.status}`);
@@ -85,20 +85,17 @@ async function api(path, opts = {}) {
     return res.json();
 
   } catch (error) {
-    // ✅ Handle network errors (server down, no internet)
+    //network errors (server down, no internet)
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       showError("Unable to connect to server. Please check your internet connection.");
       throw new Error("Network error - unable to connect to server");
     }
     
-    // Re-throw other errors
     throw error;
   }
 }
 
-/**
- * Authenticated API call - automatically includes JWT token
- */
+// API call with authentication 
 async function authedApi(path, opts = {}) {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -115,29 +112,23 @@ async function authedApi(path, opts = {}) {
   return api(path, { ...opts, headers: authedHeaders });
 }
 
-/**
- * Check if user is authenticated by validating token with backend
- * ✅ Validates against database, not just localStorage
- */
+// Check if user is logged in/authenticated by validating token with backend
 async function isAuthenticated() {
   const token = localStorage.getItem("token");
   if (!token) return false;
 
   try {
-    // ✅ Validate token by fetching user from database
+    // get user from database
     await authedApi("/account/me");
     return true;
   } catch (error) {
-    // ✅ Token invalid - clear it
+    // clear it if invalid
     localStorage.removeItem("token");
     return false;
   }
 }
 
-/**
- * Require authentication - redirect to login if not authenticated
- * ✅ Use this on protected pages (dashboard, checkout, orders, etc.)
- */
+// Reirect to login page if user is not logged in
 async function requireAuth() {
   const authenticated = await isAuthenticated();
   if (!authenticated) {
@@ -151,10 +142,7 @@ async function requireAuth() {
   }
 }
 
-/**
- * Parse JWT token to get user data (without API call)
- * ✅ This is fine for getting user_id from token, but always fetch fresh data from database for display
- */
+// Returns null if token is invalid or not there
 function parseJwt(token) {
   if (!token) return null;
   try {
@@ -173,11 +161,8 @@ function parseJwt(token) {
   }
 }
 
-/**
- * ✅ Show user-friendly error messages
- */
+// Show error message 
 function showError(message) {
-  // Check if we're on a page with a message display area
   const msgElements = [
     document.getElementById("loginMsg"),
     document.getElementById("regMsg"),
@@ -191,14 +176,11 @@ function showError(message) {
     msgEl.textContent = message;
     msgEl.style.display = "block";
   } else {
-    // Fallback to alert if no message element found
     alert(message);
   }
 }
 
-/**
- * ✅ Show success messages
- */
+// Show success message
 function showSuccess(message) {
   const msgElements = [
     document.getElementById("loginMsg"),
@@ -215,7 +197,7 @@ function showSuccess(message) {
   }
 }
 
-// ✅ Product images mapping (this is fine to keep in JS)
+// Products images 
 const productImages = {
   Refrigerator: "https://zlinekitchen.com/cdn/shop/products/zline--french--door--stainless--steel--standard--depth--refrigerator--RSM-W-36--side.jpg?v=1722276759&width=1946",
   Microwave: "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6577/6577280_sd.jpg",
@@ -251,4 +233,5 @@ const productImages = {
   Cooker: "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/8a375c18-b729-4b48-8f5e-bb7f3807dd76.jpg",
   WaffleMaker: "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/2e714d11-f602-44d3-b15b-051e84027af9.jpg",
   SmartSpeaker: "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6587/6587898_sd.jpg"
+
 };

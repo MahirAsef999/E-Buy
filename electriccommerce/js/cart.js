@@ -1,13 +1,6 @@
-/**
- * cart.js - FIXED VERSION
- * Uses authedApi() for authentication
- * Uses cart_item_id (item.id) for PATCH/DELETE operations
- */
-
-// Update cart badge in header
+// update cart item count
 async function updateCartBadge() {
   try {
-    // ✅ FIX: Use authedApi instead of api
     const cart = await authedApi("/cart");
     const itemCount = cart.items.length;
     const badge = document.getElementById("cartBadge");
@@ -25,7 +18,7 @@ async function updateCartBadge() {
   }
 }
 
-// Build cart rows inside cart modal
+// load items in cart 
 async function loadCart() {
   const container = document.getElementById("cartProducts");
   if (!container) return;
@@ -33,7 +26,6 @@ async function loadCart() {
   container.innerHTML = '<div class="empty-message">Loading cart...</div>';
 
   try {
-    // ✅ FIX: Use authedApi instead of api
     const cart = await authedApi("/cart");
 
     if (!cart.items.length) {
@@ -54,16 +46,16 @@ async function loadCart() {
   }
 }
 
+// create cart item row
 function createProductRow(item) {
-  // ✅ FIX: Extract cart_item_id from item.id (NOT productId)
-  const cartItemId = item.id;  // This is the cart_items.id from database
+  const cartItemId = item.id; 
   const productId = item.productId;
   const price = item.price;
   const qty = item.qty;
 
   const row = document.createElement("div");
   row.className = "cart-product-row";
-  row.dataset.cartItemId = cartItemId;  // Store cart item ID
+  row.dataset.cartItemId = cartItemId; 
   row.dataset.productId = productId;
 
   const imgDiv = document.createElement("div");
@@ -120,7 +112,6 @@ function createProductRow(item) {
   row.appendChild(descDiv);
   row.appendChild(delBtn);
 
-  // ✅ FIX: Pass cartItemId (NOT productId) to change/remove functions
   minus.addEventListener("click", () =>
     changeQty(cartItemId, parseInt(input.value || "1", 10) - 1)
   );
@@ -132,16 +123,15 @@ function createProductRow(item) {
   return row;
 }
 
-// ✅ FIX: Use cartItemId and authedApi
+// remove or change amount of item in cart
 async function changeQty(cartItemId, newQty) {
   if (newQty <= 0) {
-    if (confirm("Remove this item from cart?")) {
+    if (confirm("Remove this item from cart?")) { 
       await removeItem(cartItemId);
     }
     return;
   }
   try {
-    // ✅ FIX: Use authedApi and cartItemId in URL
     await authedApi(`/cart/items/${cartItemId}`, {
       method: "PATCH",
       body: JSON.stringify({ qty: newQty })
@@ -154,10 +144,9 @@ async function changeQty(cartItemId, newQty) {
   }
 }
 
-// ✅ FIX: Use cartItemId and authedApi
+// remove item from cart
 async function removeItem(cartItemId) {
   try {
-    // ✅ FIX: Use authedApi and cartItemId in URL
     await authedApi(`/cart/items/${cartItemId}`, {
       method: "DELETE"
     });
@@ -169,6 +158,7 @@ async function removeItem(cartItemId) {
   }
 }
 
+// update order summary
 function updateSummary(subtotal) {
   const shipping = subtotal > 0 ? 0 : 0;
   const taxRate = 0.08;
@@ -186,6 +176,7 @@ function updateSummary(subtotal) {
   if (totalEl) totalEl.textContent = `Total: $${total.toFixed(2)}`;
 }
 
+// open cart
 async function openCart() {
   const modal = document.getElementById("cartModal");
   if (!modal) return;
@@ -193,13 +184,15 @@ async function openCart() {
   await loadCart();
 }
 
+// close cart
 function closeCart() {
   const modal = document.getElementById("cartModal");
   if (modal) modal.style.display = "none";
 }
 
-// Checkout
+// go to checkout
 async function checkout() {
   closeCart();
   window.location.href = "checkout.html";
+
 }

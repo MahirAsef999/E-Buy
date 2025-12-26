@@ -1,10 +1,3 @@
-/**
- * loginauth.js - User login handler
- * ✅ PRODUCTION-READY with proper error handling
- * ✅ Only stores JWT token - all user data comes from database via API
- * ✅ Session persists across browser sessions until token expires
- */
-
 async function postJSON(path, body) {
   return api(path, {
     method: "POST",
@@ -12,6 +5,7 @@ async function postJSON(path, body) {
   });
 }
 
+// If there are errors, clear them
 function clearErrors() {
   document.getElementById("emailError").textContent = "";
   document.getElementById("passwordError").textContent = "";
@@ -23,15 +17,18 @@ function clearErrors() {
   document.getElementById("loginPassword").classList.remove("error");
 }
 
+// Show error message for specific fields
 function showFieldError(fieldId, errorId, message) {
   document.getElementById(errorId).textContent = message;
   document.getElementById(fieldId).classList.add("error");
 }
 
+// Email format validation
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Login form submission
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   clearErrors();
@@ -41,7 +38,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const msg = document.getElementById("loginMsg");
   let hasError = false;
 
-  // ✅ CLIENT-SIDE VALIDATION
+  // Email (validate and error message)
   if (!email) {
     showFieldError("loginEmail", "emailError", "Email is required");
     hasError = true;
@@ -50,6 +47,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     hasError = true;
   }
 
+  // Password (validate and error messaage)
   if (!password) {
     showFieldError("loginPassword", "passwordError", "Password is required");
     hasError = true;
@@ -60,27 +58,25 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   if (hasError) return;
 
-  // ✅ Disable button to prevent double submission
+  // Prevent multiple submissions
   const submitBtn = document.getElementById("loginBtn");
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
   submitBtn.textContent = "Signing in...";
 
   try {
-    // ✅ LOGIN REQUEST - validates against database
+    // Attempt login
     const data = await postJSON("/auth/login", { email, password });
     
-    // ✅ ONLY store the JWT token - nothing else!
-    // Token persists across browser sessions until it expires
-    // All user data will be fetched from database when needed
+    // User data will be taken from database when needed
     localStorage.setItem("token", data.token);
 
     msg.className = "success";
     msg.style.display = "block";
     msg.textContent = "Login successful! Redirecting...";
-    console.log("✓ User logged in successfully:", email);
+    console.log("Success: User logged in successfully:", email);
 
-    // ✅ Redirect to dashboard after short delay
+    // Direct to dashboard
     setTimeout(() => {
       window.location.href = "dashboard.html";
     }, 800);
@@ -88,20 +84,19 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   } catch (err) {
     console.error("Login failed:", err);
     
-    // ✅ Re-enable button
+    // Restore button state
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
     
     msg.className = "error";
     msg.style.display = "block";
     
-    // ✅ SHOW USER-FRIENDLY ERROR MESSAGES
     const errorMessage = err.message.toLowerCase();
     
     if (errorMessage.includes("invalid credentials") || 
         errorMessage.includes("401") || 
         errorMessage.includes("unauthorized")) {
-      msg.textContent = "✗ Incorrect email or password. Please try again.";
+      msg.textContent = "Error: Incorrect email or password. Please try again.";
       showFieldError("loginEmail", "emailError", " ");
       showFieldError("loginPassword", "passwordError", "Check your credentials");
     } 
@@ -112,12 +107,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       msg.textContent = "Server error. Please try again in a few moments.";
     }
     else {
-      msg.textContent = "✗ " + (err.message || "Login failed. Please try again.");
+      msg.textContent = "Error: " + (err.message || "Login failed. Please try again.");
     }
   }
 });
 
-// ✅ Clear errors on input
+// Email (event listener to clear errors on input)
 document.getElementById("loginEmail").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("emailError").textContent = "";
@@ -129,6 +124,7 @@ document.getElementById("loginEmail").addEventListener("input", function () {
   }
 });
 
+// Password (event listener to clear errors on input)
 document.getElementById("loginPassword").addEventListener("input", function () {
   if (this.value) {
     document.getElementById("passwordError").textContent = "";
@@ -140,28 +136,29 @@ document.getElementById("loginPassword").addEventListener("input", function () {
   }
 });
 
+// Clear button
 document.getElementById("loginClear").addEventListener("click", () => {
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginPassword").value = "";
   clearErrors();
 });
 
-// ✅ REDIRECT IF ALREADY LOGGED IN
-// This checks if user has valid session (token validated against database)
+// If user logged in, direct to dashboard
 window.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      // ✅ Validate token by fetching user data from database
       // If token is valid, user data will be returned
-      // If token expired or invalid, this will throw error and clear token
       await authedApi('/account/me');
       console.log('Already logged in with valid session, redirecting to dashboard');
       window.location.href = "dashboard.html";
     } catch (error) {
-      // ✅ Token is invalid/expired, clear it and stay on login page
+      //Token is invalid/expired, clear it and stay on login page
       console.log('Session expired, clearing token');
       localStorage.removeItem('token');
     }
   }
+
 });
+
+

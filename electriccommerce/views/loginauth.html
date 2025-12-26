@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>E-Buy — Sign In</title>
-  <link rel="stylesheet" href="../styles/auth.css" />
+  <!--Css Files-->
+  <link rel="stylesheet" href="styles/auth.css" />
 </head>
 <body>
   <div class="wrap">
@@ -21,27 +22,29 @@
         <fieldset>
           <legend>Login</legend>
           <form id="loginForm" novalidate>
+            <!-- Email -->
             <div class="form-group">
               <label for="loginEmail">Email</label>
               <input id="loginEmail" type="email" placeholder="your@email.com" required>
               <span class="field-error" id="emailError"></span>
             </div>
-            
+            <!-- Password -->
             <div class="form-group">
               <label for="loginPassword">Password</label>
               <input id="loginPassword" type="password" placeholder="At least 8 characters" minlength="8" required>
               <span class="field-error" id="passwordError"></span>
             </div>
-
+            <!-- Sign in button-->
             <div class="actions">
               <button type="submit" id="loginBtn" class="btn-primary">Sign In</button>
+              <!--Clear button-->
               <button type="button" id="loginClear" class="btn-secondary">Clear</button>
             </div>
 
             <p id="loginMsg" class="muted"></p>
           </form>
         </fieldset>
-
+        <!-- If user does not have an account, direct to register page-->
         <div class="register-prompt">
           <p>Don't have an account?</p>
           <a href="registerauth.html" class="create-account-link">Create an account if you don't have one</a>
@@ -50,7 +53,9 @@
     </div>
   </div>
 
-  <script src="../js/api.js"></script>
-  <script src="../js/loginauth.js"></script>
+  <!-- Js Files-->
+  <script src="js/api.js"></script>
+  <script src="js/loginauth.js"></script>
 </body>
+
 </html>

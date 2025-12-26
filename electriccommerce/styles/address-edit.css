@@ -1,3 +1,4 @@
+
 #main-container {
     display: flex;
     flex-direction: column;
@@ -11,6 +12,7 @@
     padding: 10px;
 }
 
+/*breadcrumb navigation*/
 #path-row {
     display: flex;
     flex-direction: row;
@@ -18,6 +20,7 @@
     font-size: 18px;
 }
 
+/*breadcrumb links*/
 #path-row a {
     text-decoration: none;
     color: black;
@@ -27,12 +30,14 @@
     text-decoration: underline;
 }
 
+/*page title*/
 #title-row {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 10px;
 }
 
+/*address edit container box*/
 #edit-container {
     display: flex;
     flex-direction: column;
@@ -50,6 +55,7 @@
     font-weight: 600;
 }
 
+/*input/save box*/
 .edit-box {
     display: flex;
     flex-direction: row;
@@ -72,7 +78,6 @@
     width: 140%;
 }
 
-/* Make the State dropdown match the input size */
 #state-select {
     font-size: 18px;
     padding: 6px;
@@ -80,11 +85,13 @@
     box-sizing: border-box;
 }
 
+/*line between each section*/
 .border-bottom {
     border-bottom: 1px rgb(192, 191, 191) solid;
     padding-bottom: 20px;
 }
 
+/*save changes button*/
 .save-changes{
     height: 30px;
     border-radius: 10px;

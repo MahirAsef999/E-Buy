@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>E-Buy — Create Account</title>
-  <link rel="stylesheet" href="../styles/auth.css" />
+  <!--Css Files-->
+  <link rel="stylesheet" href="styles/auth.css" />
 </head>
 <body>
   <div class="wrap">
@@ -23,28 +24,28 @@
         <fieldset>
           <legend>Register</legend>
           <form id="registerForm" novalidate>
-            <!-- First Name -->
+            <!--First Name-->
             <div class="form-group">
               <label for="regFirstName">First Name</label>
               <input id="regFirstName" type="text" placeholder="Enter first name" required>
               <span class="field-error" id="firstNameError"></span>
             </div>
 
-            <!-- Last Name -->
+            <!--Last Name-->
             <div class="form-group">
               <label for="regLastName">Last Name</label>
               <input id="regLastName" type="text" placeholder="Enter last name" required>
               <span class="field-error" id="lastNameError"></span>
             </div>
 
-            <!-- Email -->
+            <!--Email-->
             <div class="form-group">
               <label for="regEmail">Email</label>
               <input id="regEmail" type="email" placeholder="Enter email" required>
               <span class="field-error" id="emailError"></span>
             </div>
 
-            <!-- Password -->
+            <!--Password-->
             <div class="form-group">
               <label for="regPassword">Password</label>
               <input id="regPassword" type="password"
@@ -52,7 +53,7 @@
               <span class="field-error" id="passwordError"></span>
             </div>
 
-            <!-- Confirm Password -->
+            <!--Confirm Password-->
             <div class="form-group">
               <label for="regPassword2">Confirm Password</label>
               <input id="regPassword2" type="password"
@@ -60,7 +61,7 @@
               <span class="field-error" id="password2Error"></span>
             </div>
 
-            <!-- Address (optional) -->
+            <!--Address (Optional)-->
             <div class="form-group">
               <label for="regAddress">Address (Optional)</label>
               <textarea id="regAddress" rows="3"
@@ -68,14 +69,16 @@
             </div>
 
             <div class="actions">
+              <!--Create Account Button-->
               <button type="submit" id="registerBtn" class="btn-primary">Create Account</button>
+              <!--Clear Button-->
               <button type="button" id="regClear" class="btn-secondary">Clear</button>
             </div>
 
             <p id="regMsg" class="muted"></p>
           </form>
         </fieldset>
-
+        <!--If user already has an account, direct to login page-->
         <div class="register-prompt">
           <p>Already have an account?</p>
           <a href="loginauth.html" class="create-account-link">Sign in here</a>
@@ -84,7 +87,8 @@
     </div>
   </div>
 
-  <script src="../js/api.js"></script>
-  <script src="../js/registerauth.js"></script>
+  <!-- Js Files-->
+  <script src="js/api.js"></script>
+  <script src="js/registerauth.js"></script>
 </body>
 </html>

@@ -4,16 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>E-Buy — Admin Dashboard</title>
-
-  <link rel="stylesheet" href="../styles/admin.css" />
+  <!--Css Files-->
+  <link rel="stylesheet" href="styles/admin.css" />
 </head>
 
 <body>
   <header class="topbar">
-    <!-- THIS wrapper is what makes the top bar align evenly like the “blue” layout -->
     <div class="topbar-inner">
+      <!--Logo-->
       <div class="brand">
-        <div class="logo">E-Buy</div>
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;">E-Buy</div>
         <div class="subtitle">Admin Dashboard</div>
       </div>
 
@@ -26,16 +26,17 @@
 
   <main class="container">
 
-    <!-- USERS PANEL -->
     <section class="panel">
       <div class="panel-header">
         <h1>Users</h1>
         <div class="filters">
+          <!--Users Search and Refresh-->
           <input id="userSearch" type="text" placeholder="Search users (name / email / id)" />
           <button class="btn" id="refreshUsersBtn" type="button">Refresh</button>
         </div>
       </div>
 
+      <!--Users Table-->
       <div class="table-wrap">
         <table class="table">
           <thead>
@@ -55,12 +56,13 @@
       </div>
     </section>
 
-    <!-- ORDERS PANEL -->
     <section class="panel">
       <div class="panel-header">
         <h1>Orders</h1>
         <div class="filters">
+          <!--Orders Search, Status Filter and Refresh-->
           <input id="orderSearch" type="text" placeholder="Search orders (order id / user email / user id)" />
+          <!--Status-->
           <select id="statusFilter">
             <option value="">All Statuses</option>
             <option value="pending">pending</option>
@@ -74,6 +76,7 @@
         </div>
       </div>
 
+      <!--Orders Table-->
       <div class="table-wrap">
         <table class="table">
           <thead>
@@ -99,7 +102,8 @@
 
   </main>
 
-  <script src="../js/api.js"></script>
-  <script src="../js/admin.js"></script>
+  <!--Js Files-->
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>
