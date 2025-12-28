@@ -27,13 +27,13 @@ body {
   color: var(--text);
 }
 
-/* --- make topbar align with page content width --- */
+/*top navigation bar*/
 .topbar {
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
 
-/* A wrapper effect using padding + max width */
+/*topbar wrapping*/
 .topbar {
   padding: 14px 0;
 }
@@ -41,7 +41,6 @@ body {
 .topbar::before,
 .topbar::after { content: ""; display: none; }
 
-/* Put the actual content into “container width” alignment */
 .topbar {
   display: flex;
   justify-content: center;
@@ -58,7 +57,7 @@ body {
   gap: 16px;
 }
 
-/* --- brand --- */
+/*E-Buy Logo and admin dashboard*/
 .brand {
   display: flex;
   gap: 12px;
@@ -75,23 +74,23 @@ body {
   font-size: 14px;
 }
 
-/* --- actions --- */
+/*logout button*/
 .topbar-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-/*layout*/
+/*container holding users and orders panel*/
 .container {
-  max-width: 1320px;          /* match topbar */
+  max-width: 1320px;          
   margin: 18px auto;
-  padding: 0 22px;            /* match topbar */
+  padding: 0 22px;            
   display: grid;
   gap: 16px;
 }
 
-/* --- panels --- */
+/*panels*/
 .panel {
   background: var(--card);
   border: 1px solid var(--border);
@@ -100,6 +99,7 @@ body {
   overflow: hidden;
 }
 
+/*panel header (users and orders header)*/
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -114,7 +114,7 @@ body {
   font-size: 20px;
 }
 
-/* --- filters --- */
+/*search bar*/
 .filters {
   display: flex;
   gap: 10px;
@@ -138,11 +138,12 @@ body {
   min-width: 260px;
 }
 
+/*table*/
 .table-wrap {
   overflow: auto;
 }
 
-/* --- table --- */
+/*users and orders table styles*/
 .table {
   width: 100%;
   border-collapse: separate;
@@ -150,6 +151,7 @@ body {
   min-width: 980px;
 }
 
+/*table cell*/
 .table th,
 .table td {
   padding: 12px 10px;
@@ -158,6 +160,7 @@ body {
   font-size: 14px;
 }
 
+/*table header*/
 .table thead th {
   text-align: left;
   color: var(--table-head-text);
@@ -176,7 +179,7 @@ body {
 
 .muted { color: var(--muted); }
 
-/*buttons*/
+/*refresh and save button*/
 .btn {
   height: 36px;
   padding: 0 12px;
@@ -190,12 +193,13 @@ body {
 
 .btn:hover { opacity: 0.92; }
 
+/*logout button*/
 .btn-outline {
   background: transparent;
   color: #111827;
 }
 
-/* --- pill --- */
+/*pill (Admin verified)*/
 .pill {
   display: inline-block;
   padding: 6px 10px;
@@ -206,7 +210,7 @@ body {
   color: #111827;
 }
 
-/*items*/
+/*Items*/
 .items {
   display: flex;
   flex-direction: column;
@@ -230,7 +234,7 @@ body {
   gap: 2px;
 }
 
-/* --- status chips --- */
+/*status label (paid, shipped, delivered, failed, cancelled)*/
 .status {
   display: inline-flex;
   align-items: center;
@@ -242,6 +246,7 @@ body {
   background: #fff;
 }
 
+/*status colors*/
 .status.pending { color: var(--warn); border-color: rgba(245,158,11,0.35); }
 .status.paid { color: var(--ok); border-color: rgba(22,163,74,0.35); }
 .status.shipped { color: var(--info); border-color: rgba(37,99,235,0.35); }
@@ -249,7 +254,7 @@ body {
 .status.failed { color: var(--danger); border-color: rgba(220,38,38,0.35); }
 .status.cancelled { color: #4b5563; border-color: rgba(107,114,128,0.35); }
 
-/* --- update controls --- */
+/*status dropdown*/
 .update-wrap {
   display: flex;
   gap: 8px;
@@ -264,6 +269,7 @@ body {
   padding: 0 10px;
 }
 
+/*save update status button*/
 .update-wrap button {
   height: 34px;
   padding: 0 10px;
@@ -277,7 +283,7 @@ body {
 
 .update-wrap button:hover { opacity: 0.92; }
 
-/* --- messages --- */
+/*messages*/
 .msg {
   margin: 12px 16px 16px 16px;
   padding: 10px 12px;
@@ -287,6 +293,7 @@ body {
   color: #111827;
 }
 
+/*error message*/
 .msg.error {
   border-color: #fecaca;
   background: #fef2f2;

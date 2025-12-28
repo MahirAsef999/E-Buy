@@ -1,10 +1,11 @@
-/* Background, fonts */
+/*background color and font of the main page*/
 body {
   background-color: #f5f5f5;
   font-family: "Poppins", sans-serif;
   margin: 0;
 }
 
+/*navigation bar*/
 #header{
   display: flex;
   flex-direction: row;
@@ -15,6 +16,7 @@ body {
   gap: 20px;
 }
 
+/*website name (E-buy)*/
 #website-name{
   font-size: 28px;
   font-weight: 700;
@@ -22,6 +24,7 @@ body {
   margin-right: 20px;
 }
 
+/*search bar*/
 #search-box{
   display: flex;
   flex-direction: row;
@@ -64,7 +67,7 @@ body {
   cursor: pointer;
 }
 
-/* Account box */
+/*account box (welcome message and account text)*/
 #account-box{
   display: flex;
   flex-direction: column;
@@ -77,11 +80,13 @@ body {
   transform: scale(1.01);
 }
 
+/*welcome message on account box*/
 #account-greeting {
   font-size: 14px;
   font-weight: 500;
 }
 
+/*account text and icon on account box*/
 #account-second-line{
   display: flex;
   flex-direction: row;
@@ -89,7 +94,7 @@ body {
   gap: 5px;
 }
 
-/* Auth (Login/Logout) box */
+/*login/logout box*/
 #auth-box{
   display: flex;
   flex-direction: row;
@@ -101,7 +106,7 @@ body {
   cursor: pointer;
 }
 
-/* Cart button */
+/*cart button*/
 #cartButton {
   background-color: transparent;
   border: none;
@@ -110,6 +115,7 @@ body {
   position: relative;
 }
 
+/*cart button icon*/
 #cartButton img {
   width: 50px;
   height: 50px;
@@ -120,7 +126,7 @@ body {
   transition: transform 0.2s ease-in-out;
 }
 
-/* Cart badge */
+/*Cart badge*/
 #cartBadge {
   position: absolute;
   top: -5px;
@@ -141,7 +147,7 @@ body {
   display: flex;
 }
 
-/* Modals (cart + product) */
+/*Modals (cart and product)*/
 .modal {
   display: none;
   position: fixed;
@@ -168,7 +174,7 @@ body {
   position: relative;
 }
 
-/* Close icon */
+/*close button*/
 .close {
   color: #aaa;
   position: absolute;
@@ -184,7 +190,7 @@ body {
   color: black;
 }
 
-/* Utility messages */
+/*utility messages*/
 .empty-message {
   padding: 30px;
   color: #666;
@@ -196,6 +202,7 @@ body {
   color: #666;
 }
 
+/*main product section*/
 #main-container{
   display: flex;
   flex-direction: column;
@@ -204,6 +211,7 @@ body {
   padding-bottom: 50px;
 }
 
+/*container for each row of products*/
 .product-row{
   display: flex;
   flex-direction: column;
@@ -216,6 +224,7 @@ body {
   background-color: white;
 }
 
+/*title for each product row category (kitchen, entertainment, portable electronics)*/
 .row-title{
   font-size: 24px;
   font-weight: bold;
@@ -225,6 +234,7 @@ body {
   width: 100%;
 }
 
+/*slider container*/
 .slider-container{
   display: flex;
   flex-direction: row;
@@ -233,6 +243,7 @@ body {
   gap: 30px;
 }
 
+/*slider buttons (left and right arrows)*/
 .slide-btn{
   height: fit-content;
   width: fit-content;
@@ -249,6 +260,7 @@ body {
   border-radius: 20px;
 }
 
+/*horizontal slider*/
 .slider{
   display: flex;
   flex-direction: row;
@@ -262,6 +274,7 @@ body {
   display: none;
 }
 
+/*individual product card*/
 .card{
   width: 10vw;
   height: 20vh;
@@ -272,6 +285,7 @@ body {
   background-color: white;
 }
 
+/*advertisement banner*/
 .banner-container{
   display: flex;
   flex-direction: row;

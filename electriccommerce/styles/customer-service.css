@@ -1,3 +1,4 @@
+/*customer service page style*/
 * {
     margin: 0;
     padding: 0;
@@ -15,7 +16,7 @@ body {
     margin: 0 auto;
 }
 
-/* Breadcrumb */
+/*breadcrumb navigation*/
 .breadcrumb {
     font-size: 14px;
     color: #666;
@@ -35,7 +36,7 @@ body {
     margin: 0 8px;
 }
 
-/* Page Title */
+/*page title*/
 h1 {
     font-size: 32px;
     font-weight: 600;
@@ -43,7 +44,7 @@ h1 {
     margin-bottom: 40px;
 }
 
-/* FAQ Sections */
+/*faq sections*/
 .faq-section {
     background: white;
     padding: 30px;
@@ -61,6 +62,7 @@ h1 {
     border-bottom: 1px solid #e0e0e0;
 }
 
+/*faq emoji*/
 .faq-item {
     margin-bottom: 25px;
 }
@@ -69,6 +71,7 @@ h1 {
     margin-bottom: 0;
 }
 
+/*faq question and answer*/
 .faq-question {
     font-size: 16px;
     font-weight: 600;
@@ -83,7 +86,7 @@ h1 {
     padding-left: 0;
 }
 
-/* Contact Section */
+/*contact section */
 .contact-section {
     background: white;
     padding: 30px;
@@ -122,7 +125,7 @@ h1 {
     font-size: 14px;
 }
 
-/* Back Button */
+/*back button*/
 .back-button {
     display: inline-block;
     background: #007bff;

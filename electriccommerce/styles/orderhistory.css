@@ -1,4 +1,4 @@
-/* Layout  */
+/*font and layout for page*/
 #main-container {
     display: flex;
     flex-direction: column;
@@ -12,6 +12,7 @@
     padding: 20px 40px;
 }
 
+/*breadcrumb navigation*/
 #path-row {
     display: flex;
     flex-direction: row;
@@ -19,6 +20,7 @@
     font-size: 18px;
 }
 
+/*breadcrumb links*/
 #path-row a {
     text-decoration: none;
     color: black;
@@ -28,13 +30,14 @@
     text-decoration: underline;
 }
 
+/*page title*/
 #page-title {
     font-size: 28px;
     font-weight: 700;
     margin-top: 5px;
 }
 
-/* Filter bar */
+/*filter bars (last 30 days, last 6 months, this year, all time)*/
 #filters-row {
     display: flex;
     flex-direction: row;
@@ -66,7 +69,7 @@
     filter: brightness(0.97);
 }
 
-/* Orders list */
+/*orders section*/
 #orders-section {
     margin-top: 5px;
     display: flex;
@@ -74,6 +77,7 @@
     align-items: center;
 }
 
+/*order list and card*/
 #orders-list {
     width: 650px;
     display: flex;
@@ -81,7 +85,6 @@
     gap: 18px;
 }
 
-/* Order card */
 .order-card {
     border: 1px solid #cccccc;
     border-radius: 6px;
@@ -89,7 +92,7 @@
     overflow: hidden;
 }
 
-/* Header row: date + total */
+/*order dates and total amount of money*/
 .order-header {
     display: flex;
     justify-content: space-between;
@@ -120,11 +123,12 @@
     color: #555;
 }
 
-/* Items list - mimic cart rows */
+/*order product list*/
 .order-items {
     padding: 10px 14px 0 14px;
 }
 
+/*order product row*/
 .order-item-row {
     display: grid;
     grid-template-columns: 70px 1fr auto;
@@ -139,6 +143,7 @@
     padding-bottom: 0;
 }
 
+/*order item details*/
 .order-item-img {
     width: 60px;
     height: 60px;
@@ -160,12 +165,12 @@
     color: #555;
 }
 
+/*order subtotal*/
 .order-item-subtotal {
     font-size: 14px;
     font-weight: 600;
 }
 
-/* Summary (subtotal, tax, total) */
 .order-summary-row {
     padding: 8px 14px 10px 14px;
     font-size: 14px;
@@ -183,19 +188,17 @@
     font-weight: 700;
 }
 
-/* Empty message */
 #no-orders {
     margin-top: 12px;
     font-size: 14px;
     color: #555;
 }
 
-/* Helper */
 .hidden {
     display: none;
 }
 
-/* Small screens */
+/*mobile responsive*/
 @media (max-width: 800px) {
     #orders-list {
         width: 100%;
